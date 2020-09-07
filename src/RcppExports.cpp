@@ -6,55 +6,50 @@
 
 using namespace Rcpp;
 
-// rcpparma_hello_world
-arma::mat rcpparma_hello_world();
-RcppExport SEXP _epmgp_rcpparma_hello_world() {
+// erfcx
+double erfcx(double x);
+RcppExport SEXP _epmgp_erfcx(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpparma_hello_world());
+    Rcpp::traits::input_parameter< double >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(erfcx(x));
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpparma_outerproduct
-arma::mat rcpparma_outerproduct(const arma::colvec& x);
-RcppExport SEXP _epmgp_rcpparma_outerproduct(SEXP xSEXP) {
+// trunc_norm_moments
+Rcpp::List trunc_norm_moments(arma::vec lb_in, arma::vec ub_in, arma::vec mu_in, arma::vec sigma_in);
+RcppExport SEXP _epmgp_trunc_norm_moments(SEXP lb_inSEXP, SEXP ub_inSEXP, SEXP mu_inSEXP, SEXP sigma_inSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparma_outerproduct(x));
+    Rcpp::traits::input_parameter< arma::vec >::type lb_in(lb_inSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type ub_in(ub_inSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type mu_in(mu_inSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type sigma_in(sigma_inSEXP);
+    rcpp_result_gen = Rcpp::wrap(trunc_norm_moments(lb_in, ub_in, mu_in, sigma_in));
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpparma_innerproduct
-double rcpparma_innerproduct(const arma::colvec& x);
-RcppExport SEXP _epmgp_rcpparma_innerproduct(SEXP xSEXP) {
+// axisepmgp
+Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub);
+RcppExport SEXP _epmgp_axisepmgp(SEXP mSEXP, SEXP KSEXP, SEXP lbSEXP, SEXP ubSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparma_innerproduct(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcpparma_bothproducts
-Rcpp::List rcpparma_bothproducts(const arma::colvec& x);
-RcppExport SEXP _epmgp_rcpparma_bothproducts(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparma_bothproducts(x));
+    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type K(KSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lb(lbSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type ub(ubSEXP);
+    rcpp_result_gen = Rcpp::wrap(axisepmgp(m, K, lb, ub));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_epmgp_rcpparma_hello_world", (DL_FUNC) &_epmgp_rcpparma_hello_world, 0},
-    {"_epmgp_rcpparma_outerproduct", (DL_FUNC) &_epmgp_rcpparma_outerproduct, 1},
-    {"_epmgp_rcpparma_innerproduct", (DL_FUNC) &_epmgp_rcpparma_innerproduct, 1},
-    {"_epmgp_rcpparma_bothproducts", (DL_FUNC) &_epmgp_rcpparma_bothproducts, 1},
+    {"_epmgp_erfcx", (DL_FUNC) &_epmgp_erfcx, 1},
+    {"_epmgp_trunc_norm_moments", (DL_FUNC) &_epmgp_trunc_norm_moments, 4},
+    {"_epmgp_axisepmgp", (DL_FUNC) &_epmgp_axisepmgp, 4},
     {NULL, NULL, 0}
 };
 
