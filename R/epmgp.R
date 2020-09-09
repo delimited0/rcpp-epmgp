@@ -1,4 +1,6 @@
-ptmvn <- function(lb, ub, mu, Sigma, log = FALSE) {
+#'
+#' @export
+pmvn <- function(lb, ub, mu, Sigma, log = FALSE) {
   result <- axisepmgp(mu, Sigma, lb, ub)
   
   log_prob <- result$logZ
