@@ -40,7 +40,6 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
     restart_algorithm = false;
     
     for (int j = 0; j < p; j++) {
-      int skip_site = 0;
       
       // make the cavity distribution
       arma::vec Cj = C.col(j);
@@ -50,7 +49,9 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
         arma::dot(Cj, mu) / (arma::as_scalar(Cj.t() * Sigma * Cj)) -
         nu_site(j) / frac_terms(j);
       
-      Rcpp::Rcout << "Made cavity distribution" << std::endl;
+      // Rcpp::Rcout << "Made cavity distribution" << std::endl;
+      // Rcpp::Rcout << "tau_cavity: " << tau_cavity << std::endl;
+      // Rcpp::Rcout << "nu_cavity: " << nu_cavity << std::endl;
       
       if (tau_cavity(j) <= 0) {
         // problem negative cavity updates
@@ -72,7 +73,10 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
       logz_hat(j) = logz_hat_out(0);
       mu_hat(j) = mu_hat_out(0);
       
-      Rcpp::Rcout << "Made moments" << std::endl;
+      // Rcpp::Rcout << "Made moments" << std::endl;
+      // Rcpp::Rcout << "sigma_hat: " << sigma_hat << std::endl;
+      // Rcpp::Rcout << "logz_hat: " << logz_hat << std::endl;
+      // Rcpp::Rcout << "mu_hat: " << mu_hat << std::endl;
       
       if (sigma_hat(j) == 0) {
         // the algorithm has found a 0 weight dimension, terminate
@@ -88,9 +92,13 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
       delta_nu_site(j) = 
         damp_terms(j) * (frac_terms(j) * (mu_hat(j) / sigma_hat(j) - nu_cavity(j)) - nu_site(j));
       tau_site(j) += delta_tau_site(j);
-      nu_site(j) += nu_site(j) + delta_nu_site(j);
+      nu_site(j) += delta_nu_site(j);
     
-      Rcpp::Rcout << "Updated sites" << std::endl;
+      // Rcpp::Rcout << "Updated sites" << std::endl;
+      // Rcpp::Rcout << "delta_tau_site: " << delta_tau_site << std::endl;
+      // Rcpp::Rcout << "delta_nu_site: " << delta_nu_site << std::endl;
+      // Rcpp::Rcout << "tau_site: " << tau_site << std::endl;
+      // Rcpp::Rcout << "nu_site: " << nu_site << std::endl;
       
       if (tau_site(j) < 0) {
         // if result negative, either due to numerical precision or error
@@ -107,7 +115,11 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
         ((delta_nu_site(j) - delta_tau_site(j) * arma::dot(Cj, mu)) / 
          (1 + delta_tau_site(j) * arma::dot(Cj, sc))) * sc;
       
-      Rcpp::Rcout << "Updated q(x)" << std::endl;
+      // Rcpp::Rcout << "Updated q(x)" << std::endl;
+      // Rcpp::Rcout << "sc: " << sc << std::endl;
+      // Rcpp::Rcout << "Sigma: " << Sigma << std::endl;
+      // Rcpp::Rcout << "mu: " << mu << std::endl;
+      
     }
     
     // check convergence criteria
@@ -140,11 +152,13 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
       lz_det_mat += tau_site(j) * lc * lc.t();
     }
     
+    // Rcpp::Rcout << "lzdetmat: " << lz_det_mat << std::endl;
+    
     double logdet_value;
     double sign;
-    
     arma::log_det(logdet_value, sign, lz_det_mat);
-    double lz0 = -.5 * std::exp(logdet_value) * sign;
+    
+    double lz0 = -.5 * logdet_value;
     double lz1 = 
       -.5 * std::pow(arma::norm(arma::solve(L, m)), 2) + 
        .5 * std::pow(arma::norm(arma::solve(L, mu)), 2) + 
@@ -157,6 +171,9 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
                       2 * mu_cavity % nu_site % frac_terms -
                       arma::pow(nu_site, 2) % sigma_cavity) / 
                       (frac_terms + tau_site % sigma_cavity));
+    
+    // Rcpp::Rcout << "lz: " << lz0 << ", " << lz1 << ", " << lz2 << ", " << lz3 << std::endl;
+    
     logz = lz0 + lz1 + lz2 + lz3;
   }
   
