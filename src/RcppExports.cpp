@@ -6,6 +6,36 @@
 
 using namespace Rcpp;
 
+// axisepmgp
+Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub);
+RcppExport SEXP _epmgp_axisepmgp(SEXP mSEXP, SEXP KSEXP, SEXP lbSEXP, SEXP ubSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type K(KSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lb(lbSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type ub(ubSEXP);
+    rcpp_result_gen = Rcpp::wrap(axisepmgp(m, K, lb, ub));
+    return rcpp_result_gen;
+END_RCPP
+}
+// epmgp
+Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec ub, int max_steps);
+RcppExport SEXP _epmgp_epmgp(SEXP mSEXP, SEXP KSEXP, SEXP CSEXP, SEXP lbSEXP, SEXP ubSEXP, SEXP max_stepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type K(KSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type C(CSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lb(lbSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type ub(ubSEXP);
+    Rcpp::traits::input_parameter< int >::type max_steps(max_stepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(epmgp(m, K, C, lb, ub, max_steps));
+    return rcpp_result_gen;
+END_RCPP
+}
 // erfcx
 double erfcx(double x);
 RcppExport SEXP _epmgp_erfcx(SEXP xSEXP) {
@@ -31,25 +61,12 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// axisepmgp
-Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub);
-RcppExport SEXP _epmgp_axisepmgp(SEXP mSEXP, SEXP KSEXP, SEXP lbSEXP, SEXP ubSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type K(KSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type lb(lbSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type ub(ubSEXP);
-    rcpp_result_gen = Rcpp::wrap(axisepmgp(m, K, lb, ub));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_epmgp_axisepmgp", (DL_FUNC) &_epmgp_axisepmgp, 4},
+    {"_epmgp_epmgp", (DL_FUNC) &_epmgp_epmgp, 6},
     {"_epmgp_erfcx", (DL_FUNC) &_epmgp_erfcx, 1},
     {"_epmgp_trunc_norm_moments", (DL_FUNC) &_epmgp_trunc_norm_moments, 4},
-    {"_epmgp_axisepmgp", (DL_FUNC) &_epmgp_axisepmgp, 4},
     {NULL, NULL, 0}
 };
 

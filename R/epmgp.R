@@ -9,3 +9,13 @@ pmvn <- function(lb, ub, mu, Sigma, log = FALSE) {
   else
     return(exp(log_prob))
 }
+
+pmvn2 <- function(mu, Sigma, lb, ub, A, log = FALSE, max_steps = 200) {
+  result <- epmgp(mu, Sigma, A, lb, ub, max_steps)
+  
+  log_prob <- result$logZ
+  if (log)
+    return(log_prob)
+  else
+    return(exp(log_prob))
+}
