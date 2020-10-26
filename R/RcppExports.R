@@ -9,6 +9,22 @@ epmgp <- function(m, K, C, lb, ub, max_steps) {
     .Call(`_epmgp_epmgp`, m, K, C, lb, ub, max_steps)
 }
 
+sample_epmh <- function(n_samples, ep_mean, ep_chol, F, g, initial) {
+    .Call(`_epmgp_sample_epmh`, n_samples, ep_mean, ep_chol, F, g, initial)
+}
+
+range_intersection <- function(first, second) {
+    .Call(`_epmgp_range_intersection`, first, second)
+}
+
+sample_epess <- function(n_samples, ep_mean, ep_chol, F, g, J, N, initial) {
+    .Call(`_epmgp_sample_epess`, n_samples, ep_mean, ep_chol, F, g, J, N, initial)
+}
+
+test_wall_hit <- function(nu, initial, ep_mean, ep_chol, F, g, J, N) {
+    .Call(`_epmgp_test_wall_hit`, nu, initial, ep_mean, ep_chol, F, g, J, N)
+}
+
 erfcx <- function(x) {
     .Call(`_epmgp_erfcx`, x)
 }

@@ -10,6 +10,7 @@ pmvn <- function(lb, ub, mu, Sigma, log = FALSE) {
     return(exp(log_prob))
 }
 
+#' @export
 pmvn2 <- function(mu, Sigma, lb, ub, A, log = FALSE, max_steps = 200) {
   result <- epmgp(mu, Sigma, A, lb, ub, max_steps)
   
@@ -18,4 +19,16 @@ pmvn2 <- function(mu, Sigma, lb, ub, A, log = FALSE, max_steps = 200) {
     return(log_prob)
   else
     return(exp(log_prob))
+}
+
+#' @export
+moments <- function(lb, ub, mu, Sigma) {
+  result <- axisepmgp(mu, Sigma, lb, ub)
+  return(result)
+}
+
+#' @export
+moments2 <- function(mu, Sigma, lb, ub, A, max_steps = 200) {
+  result <- epmgp(mu, Sigma, A, lb, ub, max_steps)
+  return(result)
 }
