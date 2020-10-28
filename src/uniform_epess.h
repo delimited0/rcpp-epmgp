@@ -23,6 +23,7 @@ public:
   
   arma::mat sample();
   
+  double pseudo_llik(const arma::vec & x);
 };
 
 class ThreshRegion {
@@ -39,5 +40,7 @@ public:
   
   double eval(const double x);
 };
+
+
 
 #endif 

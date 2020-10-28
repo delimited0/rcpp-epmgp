@@ -96,7 +96,7 @@ arma::vec UniformEPESS::wall_hitting(const arma::vec & nu) {
   arma::vec fb = this->F * b;
   
   arma::vec U = arma::sqrt(arma::square(fa) + arma::square(fb));
-  arma::vec phi = atan2(-fa, fb);
+  arma::vec phi = arma::atan2(-fa, fb);
   
   arma::vec g = this->g + this->F * this->ep_mean;
   arma::uvec pn = arma::find(arma::abs(g / U) < 1);
@@ -143,7 +143,12 @@ arma::mat UniformEPESS::sample() {
   
   for (int j = 0; j < J; j++) {
     
+    // random threshold
     double hh = std::log(arma::randu()) + this->curr_log_like;
+    
+    // griding threshold
+    // double hh = std::log( (double) (j+1) / J) + this->curr_log_like;
+    
     arma::mat mat = this->ep_cov_inv - arma::eye(this->dim, this->dim);
     
     double a0 = -2 * hh + arma::as_scalar(nu.t() * mat * nu);
@@ -179,9 +184,15 @@ arma::mat UniformEPESS::sample() {
     arma::cx_double x4 = -(b / (4*a)) + S - .5*k2;
     
     arma::cx_vec complex_roots = {x1, x2, x3, x4};
-    arma::uvec np = arma::abs(arma::imag(complex_roots)) < TOL;
+    arma::uvec np = arma::find(arma::abs(arma::imag(complex_roots)) < TOL);
+    
+    // Rcpp::Rcout << "complex roots: " << complex_roots << std::endl;
+    // Rcpp::Rcout << "np: " << np << std::endl;
+    // Rcpp::Rcout << "complex roots (np): " << complex_roots(np) << std::endl;
     
     arma::vec roots = arma::sort( arma::real(complex_roots(np)) );
+    
+    // Rcpp::Rcout << "Roots: " << roots << std::endl;
     
     // finding angle ranges
     arma::vec exact_range;
@@ -207,15 +218,17 @@ arma::mat UniformEPESS::sample() {
         theta(0) = 0.0;
         theta(theta.n_elem - 1) = 2. * arma::datum::pi;
         
+        arma::vec actual_theta(real_roots.n_elem);
         for (int k = 0; k < real_roots.n_elem; k++) {
           arma::vec values = { std::acos(real_roots(k)), 2. * arma::datum::pi - std::acos(real_roots(k)) };
           arma::vec thresh_vec = { std::abs(thresh_region.eval(values(0))), 
                                    std::abs(thresh_region.eval(values(1))) };
           arma::uword p = arma::index_min(thresh_vec);
-          theta(k+1) = values(p);
+          actual_theta(k) = values(p);
         }
+        theta.subvec(1, theta.n_elem-2) = arma::sort(actual_theta);
         
-        // Rcpp::Rcout << "Theta: " << theta << std::endl;
+        Rcpp::Rcout << "Theta: " << theta << std::endl;
         
         if (theta.n_elem == 2) {
           
@@ -239,30 +252,44 @@ arma::mat UniformEPESS::sample() {
     }
      
     // ?? what was the point of previous code?
-    // exact_range = angle_slice;  
+    // exact_range = angle_slice;
     
     // Rcpp::Rcout << "sample uniformly from range " << exact_range << std::endl;
     
     arma::vec proposal;
+    double proposal_log_like;
     // Rcpp::Rcout << "sample matrix size: " << arma::size(samples) << std::endl;
     for (int i = j*this->N; i < (j+1)*N; i++) {
       
       int rejects = 0;
+      
+      Rcpp::Rcout << "Proposing from range: " << exact_range << std::endl;
+      Rcpp::Rcout << "acceptance threshold: " << hh << std::endl;
       while (true) {
         
         double phi = simulate(exact_range);
         proposal = this->curr_sample * std::cos(phi) + nu * std::sin(phi);
-        this->curr_log_like = this->lpdf_tmvn(proposal);
+        proposal_log_like = this->pseudo_llik(proposal);
         
-        if (this->curr_log_like > hh || rejects > MAX_REJECT)
+        Rcpp::Rcout << "proposal: " << proposal << std::endl;
+        Rcpp::Rcout << "proposal log like: " << proposal_log_like << std::endl;
+        Rcpp::Rcout << "------" << std::endl;
+        // arma::vec eval = F * proposal + g;
+        // if (arma::any(eval < 0))
+        //   Rcpp::Rcout << "out of bounds" << std::endl;
+        
+        if (proposal_log_like > hh) {
           break;
+        }
         
         rejects++;
       }
       
       // Rcpp::Rcout << "i: " << i << std::endl;
       // Rcpp::Rcout << "saving to matrix, proposal: " << proposal << std::endl;
-      samples.col(i) = proposal;
+      this->curr_log_like = proposal_log_like;
+      this->curr_sample = proposal;
+      samples.col(i) = this->curr_sample;
       // Rcpp::Rcout << "sample stored" << std::endl;
     }
   }
@@ -270,9 +297,21 @@ arma::mat UniformEPESS::sample() {
   return samples;
 }
 
+double UniformEPESS::pseudo_llik(const arma::vec & x) {
+  
+  arma::vec q = this->ep_chol_inv * x;
+  double lpdf_prior =  
+    -.5 * arma::as_scalar(
+        arma::dot(q, q) + this->dim*std::log(2*arma::datum::pi) +
+        2 * arma::sum(arma::log(arma::diagvec(this->ep_chol))) );
+  
+  return this->lpdf_tmvn(x + this->ep_mean) - lpdf_prior;
+}
+
 // [[Rcpp::export]]
 arma::mat sample_epess(int n_samples, arma::vec ep_mean, arma::mat ep_chol, 
-                       arma::mat F, arma::vec g, int J, int N, arma::vec initial) {
+                       arma::mat F, arma::vec g, int J, int N, arma::vec initial,
+                       bool verbose) {
   
   UniformEPESS epess = UniformEPESS(initial, ep_mean, ep_chol, F, g, J, N);
   arma::mat samples = arma::zeros(F.n_cols, n_samples);
@@ -280,6 +319,9 @@ arma::mat sample_epess(int n_samples, arma::vec ep_mean, arma::mat ep_chol,
   
   arma::mat output;
   for (int i = 1; i < (n_samples - N * J + 1); i += N*J) {
+    
+    if (verbose) Rcpp::Rcout << "Iteration: " << i << std::endl;
+    
     output = epess.sample();
     samples.cols(i, i + N*J - 1) = output;
     epess.curr_sample = output.col(N*J - 1);

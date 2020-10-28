@@ -17,8 +17,8 @@ range_intersection <- function(first, second) {
     .Call(`_epmgp_range_intersection`, first, second)
 }
 
-sample_epess <- function(n_samples, ep_mean, ep_chol, F, g, J, N, initial) {
-    .Call(`_epmgp_sample_epess`, n_samples, ep_mean, ep_chol, F, g, J, N, initial)
+sample_epess <- function(n_samples, ep_mean, ep_chol, F, g, J, N, initial, verbose) {
+    .Call(`_epmgp_sample_epess`, n_samples, ep_mean, ep_chol, F, g, J, N, initial, verbose)
 }
 
 test_wall_hit <- function(nu, initial, ep_mean, ep_chol, F, g, J, N) {
