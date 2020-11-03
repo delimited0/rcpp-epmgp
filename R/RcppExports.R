@@ -17,6 +17,10 @@ range_intersection <- function(first, second) {
     .Call(`_epmgp_range_intersection`, first, second)
 }
 
+simulate <- function(slice_range) {
+    .Call(`_epmgp_simulate`, slice_range)
+}
+
 sample_epess <- function(n_samples, ep_mean, ep_chol, F, g, J, N, initial, verbose) {
     .Call(`_epmgp_sample_epess`, n_samples, ep_mean, ep_chol, F, g, J, N, initial, verbose)
 }

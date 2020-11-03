@@ -16,7 +16,7 @@ public:
     curr_sample(initial), J(J), N(N), TmvnSampler(F, g, ep_mean, ep_chol) {
     
     ep_cov_inv = ep_chol_inv * ep_chol_inv.t();
-    curr_log_like = lpdf_tmvn(initial);
+    curr_log_like = this->pseudo_llik(initial);
   }
   
   arma::vec wall_hitting(const arma::vec & nu);

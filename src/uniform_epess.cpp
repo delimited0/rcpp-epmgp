@@ -59,21 +59,32 @@ arma::vec range_intersection(arma::vec first, arma::vec second) {
   return result;
 }
 
+// [[Rcpp::export]]
 double simulate(arma::vec slice_range) {
   // sample angle uniformly from angle slice range
   
-  arma::vec diff = arma::diff(slice_range);
+  arma::vec diff = arma::zeros(slice_range.n_elem);
+  
+  for (int i = 0; i < slice_range.n_elem; i += 2) {
+    diff(i) = slice_range(i+1) - slice_range(i);
+  }
+  
+  // Rcpp::Rcout << "Diff: " << diff << std::endl;
+  
   double total = arma::sum(diff);
   diff /= total;
   
-  double u = arma::randu();
-  int idx;
-  for (int i = 0; i < diff.n_elem; i++) {
-    if (u < diff(i)) {
-      idx = i;
-      break;
-    }
-  }
+  // double u = arma::randu();
+  // int idx;
+  // for (int i = 0; i < diff.n_elem; i++) {
+  //   if (u < diff(i)) {
+  //     idx = i;
+  //     break;
+  //   }
+  // }
+  Rcpp::IntegerVector choices = Rcpp::seq(0, diff.n_elem-1);
+  int idx = Rcpp::sample(choices, 1, false,
+                         Rcpp::NumericVector(diff.begin(), diff.end()))[0];
   
   return arma::randu() * (slice_range(idx+1) - slice_range(idx)) + slice_range(idx);
 }
@@ -98,8 +109,8 @@ arma::vec UniformEPESS::wall_hitting(const arma::vec & nu) {
   arma::vec U = arma::sqrt(arma::square(fa) + arma::square(fb));
   arma::vec phi = arma::atan2(-fa, fb);
   
-  arma::vec g = this->g + this->F * this->ep_mean;
-  arma::uvec pn = arma::find(arma::abs(g / U) < 1);
+  arma::vec gplus = this->g + this->F * this->ep_mean;
+  arma::uvec pn = arma::find(arma::abs(gplus / U) < 1);
   
   arma::vec angle_slice;
   if (pn.n_elem > 0) {
@@ -107,8 +118,8 @@ arma::vec UniformEPESS::wall_hitting(const arma::vec & nu) {
     arma::vec phn = phi(pn);
     
     // time when coordinates hit walls
-    arma::vec t1 = -phn + arma::acos(-g(pn) / U(pn));  
-    arma::vec t2 = -phn + 2 * arma::datum::pi - arma::acos(-g(pn) / U(pn));
+    arma::vec t1 = -phn + arma::acos(-gplus(pn) / U(pn));  
+    arma::vec t2 = -phn + 2 * arma::datum::pi - arma::acos(-gplus(pn) / U(pn));
     
     // t2 is always greater than t1
     arma::vec range = {0.0, t1(0), t2(0), 2. * arma::datum::pi};
@@ -228,7 +239,7 @@ arma::mat UniformEPESS::sample() {
         }
         theta.subvec(1, theta.n_elem-2) = arma::sort(actual_theta);
         
-        Rcpp::Rcout << "Theta: " << theta << std::endl;
+        // Rcpp::Rcout << "Theta: " << theta << std::endl;
         
         if (theta.n_elem == 2) {
           
@@ -271,14 +282,15 @@ arma::mat UniformEPESS::sample() {
         proposal = this->curr_sample * std::cos(phi) + nu * std::sin(phi);
         proposal_log_like = this->pseudo_llik(proposal);
         
-        Rcpp::Rcout << "proposal: " << proposal << std::endl;
+        // Rcpp::Rcout << "proposal: " << proposal << std::endl;
         Rcpp::Rcout << "proposal log like: " << proposal_log_like << std::endl;
-        Rcpp::Rcout << "------" << std::endl;
+        
         // arma::vec eval = F * proposal + g;
         // if (arma::any(eval < 0))
         //   Rcpp::Rcout << "out of bounds" << std::endl;
         
         if (proposal_log_like > hh) {
+          // Rcpp::Rcout << "------" << std::endl;
           break;
         }
         

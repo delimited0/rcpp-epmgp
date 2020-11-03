@@ -64,6 +64,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// simulate
+double simulate(arma::vec slice_range);
+RcppExport SEXP _epmgp_simulate(SEXP slice_rangeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type slice_range(slice_rangeSEXP);
+    rcpp_result_gen = Rcpp::wrap(simulate(slice_range));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sample_epess
 arma::mat sample_epess(int n_samples, arma::vec ep_mean, arma::mat ep_chol, arma::mat F, arma::vec g, int J, int N, arma::vec initial, bool verbose);
 RcppExport SEXP _epmgp_sample_epess(SEXP n_samplesSEXP, SEXP ep_meanSEXP, SEXP ep_cholSEXP, SEXP FSEXP, SEXP gSEXP, SEXP JSEXP, SEXP NSEXP, SEXP initialSEXP, SEXP verboseSEXP) {
@@ -132,6 +143,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_epmgp_epmgp", (DL_FUNC) &_epmgp_epmgp, 6},
     {"_epmgp_sample_epmh", (DL_FUNC) &_epmgp_sample_epmh, 6},
     {"_epmgp_range_intersection", (DL_FUNC) &_epmgp_range_intersection, 2},
+    {"_epmgp_simulate", (DL_FUNC) &_epmgp_simulate, 1},
     {"_epmgp_sample_epess", (DL_FUNC) &_epmgp_sample_epess, 9},
     {"_epmgp_test_wall_hit", (DL_FUNC) &_epmgp_test_wall_hit, 8},
     {"_epmgp_erfcx", (DL_FUNC) &_epmgp_erfcx, 1},
