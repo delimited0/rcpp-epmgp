@@ -59,7 +59,6 @@ arma::vec range_intersection(arma::vec first, arma::vec second) {
   return result;
 }
 
-// [[Rcpp::export]]
 double simulate(arma::vec slice_range) {
   // sample angle uniformly from angle slice range
   
