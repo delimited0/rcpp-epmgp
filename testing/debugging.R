@@ -94,4 +94,4 @@ Sigma <- diag(d)
 lb <- b[1:(length(b)/2)]
 ub <- b[(length(b)/2 + 1):length(b)]
 
-epmgp::pmvn2(mu, Sigma, rep(Inf, ), b, A)
+epmgp::pmvn2(mu, Sigma, b, rep(Inf, 4), A)

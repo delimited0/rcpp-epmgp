@@ -273,8 +273,8 @@ arma::mat UniformEPESS::sample() {
       
       int rejects = 0;
       
-      Rcpp::Rcout << "Proposing from range: " << exact_range << std::endl;
-      Rcpp::Rcout << "acceptance threshold: " << hh << std::endl;
+      // Rcpp::Rcout << "Proposing from range: " << exact_range << std::endl;
+      // Rcpp::Rcout << "acceptance threshold: " << hh << std::endl;
       while (true) {
         
         double phi = simulate(exact_range);
@@ -282,7 +282,7 @@ arma::mat UniformEPESS::sample() {
         proposal_log_like = this->pseudo_llik(proposal);
         
         // Rcpp::Rcout << "proposal: " << proposal << std::endl;
-        Rcpp::Rcout << "proposal log like: " << proposal_log_like << std::endl;
+        // Rcpp::Rcout << "proposal log like: " << proposal_log_like << std::endl;
         
         // arma::vec eval = F * proposal + g;
         // if (arma::any(eval < 0))
