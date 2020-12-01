@@ -10,9 +10,10 @@ pmvn <- function(lb, ub, mu, Sigma, log = FALSE) {
     return(exp(log_prob))
 }
 
+#' @param A r x d matrix of constraints
 #' @export
 pmvn2 <- function(mu, Sigma, lb, ub, A, log = FALSE, max_steps = 200) {
-  result <- epmgp(mu, Sigma, A, lb, ub, max_steps)
+  result <- epmgp(mu, Sigma, t(A), lb, ub, max_steps)
   
   log_prob <- result$logZ
   if (log)

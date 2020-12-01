@@ -30,7 +30,7 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
   arma::mat L = arma::chol(K, "lower");
   
   double logz = arma::datum::inf;
-  arma::vec mu_last = -arma::datum::inf * arma::ones(p);
+  arma::vec mu_last = -arma::datum::inf * arma::ones(mu.n_elem);
   bool converged = false;
   int k = 1;
   bool restart_algorithm = false;
@@ -52,7 +52,7 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
       // Rcpp::Rcout << "Made cavity distribution" << std::endl;
       // Rcpp::Rcout << "tau_cavity: " << tau_cavity << std::endl;
       // Rcpp::Rcout << "nu_cavity: " << nu_cavity << std::endl;
-      
+
       if (tau_cavity(j) <= 0) {
         // problem negative cavity updates
         restart_algorithm = true;
@@ -114,13 +114,15 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
       mu += 
         ((delta_nu_site(j) - delta_tau_site(j) * arma::dot(Cj, mu)) / 
          (1 + delta_tau_site(j) * arma::dot(Cj, sc))) * sc;
-      
+
       // Rcpp::Rcout << "Updated q(x)" << std::endl;
       // Rcpp::Rcout << "sc: " << sc << std::endl;
       // Rcpp::Rcout << "Sigma: " << Sigma << std::endl;
       // Rcpp::Rcout << "mu: " << mu << std::endl;
       
     }
+    
+    // Rcpp::Rcout << "mu_last: " << mu_last << std::endl;
     
     // check convergence criteria
     if (arma::norm(mu_last - mu, 2) < EPS_CONVERGE)

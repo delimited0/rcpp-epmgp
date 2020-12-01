@@ -31,3 +31,16 @@ Sigma <- rep(1, 4)
 lb <- c(0, -Inf, 0, -Inf)
 ub <- c(1, 0, Inf, Inf)
 epmgp::trunc_norm_moments(lb, ub, mu, Sigma)
+
+# polytope regions ----
+
+# 2d trapezoid
+A <- matrix(c(2, -1, 0, 1, -1, 0, 0, -1), byrow = TRUE, ncol = 2)
+b <- c(0, 1, 1, 1)
+lb <- rep(-Inf, 4)
+mu <- rep(0, 2)
+Sigma <- diag(2)
+
+epmgp::epmgp(mu, Sigma, t(A), lb, b, 200)
+epmgp::pmvn2(mu, Sigma, lb, b, t(A))
+
