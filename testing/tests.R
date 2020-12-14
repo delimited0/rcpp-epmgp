@@ -41,6 +41,5 @@ lb <- rep(-Inf, 4)
 mu <- rep(0, 2)
 Sigma <- diag(2)
 
-epmgp::epmgp(mu, Sigma, t(A), lb, b, 200)
-epmgp::pmvn2(mu, Sigma, lb, b, t(A))
+epmgp::pmvn2(mu, Sigma, lb, b, A)
 
