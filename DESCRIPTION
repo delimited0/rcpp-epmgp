@@ -6,6 +6,6 @@ Date: 2020-09-04
 Author: Patrick Ding
 Maintainer: <patrickding@tamu.edu>
 Description: R implementation of Cunningham et al 2011 and Fagan et al 2016.
-License: What license is it under?
+License: MIT I guess
 Imports: Rcpp (>= 1.0.5)
 LinkingTo: Rcpp, RcppArmadillo
