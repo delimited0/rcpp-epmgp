@@ -197,7 +197,7 @@ Rcpp::List trunc_norm_moments(arma::vec lb_in, arma::vec ub_in,
           if (a >= -26.0) {
             // do things normally
             logz_hat = std::log(0.5) - std::pow(a, 2) + std::log( 
-              erfcx(a) - std::exp(-(std::pow(a, 2) - std::pow(b, 2))) * erfcx(-a) 
+              erfcx(a) - std::exp(-(std::pow(b, 2) - std::pow(a, 2))) * erfcx(b)  
             );
             
             mean_const = 2 * (

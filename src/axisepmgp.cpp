@@ -98,8 +98,12 @@ Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub) {
         arma::solve(arma::diagmat(tau_site) + arma::diagmat(tau_cavity), 
                     tau_site % m - 2 * nu_site)
     );
-    
+
     // Rcpp::Rcout << "lz1: " << lZ1 << std::endl;
+    // Rcpp::Rcout << "lz2: " << lZ2 << std::endl;
+    // Rcpp::Rcout << "lz3: " << lZ3 << std::endl;
+    // Rcpp::Rcout << "lz4: " << lZ4 << std::endl;
+    // Rcpp::Rcout << "logzhat: " << logz_hat << std::endl;
     
     logZ = lZ1 + lZ2 + lZ3 + lZ4 + arma::sum(logz_hat);
   }

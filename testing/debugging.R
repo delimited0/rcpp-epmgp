@@ -95,3 +95,5 @@ lb <- b[1:(length(b)/2)]
 ub <- b[(length(b)/2 + 1):length(b)]
 
 epmgp::pmvn2(mu, Sigma, b, rep(Inf, 4), A)
+
+# Eric Jan 21 2021 example 
