@@ -37,11 +37,20 @@ moments2 <- function(mu, Sigma, lb, ub, A, max_steps = 200) {
 }
 
 #' @export
-pmvn_seq <- function(mu, Sigma, lb, ub, A, log=FALSE, max_steps = 200) {
+seq_pmvn <- function(mu, Sigma, lb, ub, A, log=FALSE, max_steps = 200) {
   
-}
-
-fn <- function(a, b){
-  return(a)
+  d <- ncol(A)
+  eig_vals <- colSums(A^2)
+  Ad <- A[, d, drop=FALSE]
+  Xi <- Ad %*% t(Ad)
+  
+  result <- seq_epmgp(mu, Xi, lb, ub, max_steps)
+  
+  logZ = result$logZ - .5*sum(log(abs(eig_vals)))
+  
+  if (log)
+    return(logZ)
+  else
+    return(exp(logZ))
 }
 

@@ -1,5 +1,8 @@
 
 
+library(dplyr)
+library(magrittr)
+library(rpart)
 
 
 grad = function(u, params) {
@@ -71,7 +74,8 @@ m_k = mu_beta # same for all partitions A_k
 ## (6) compute the approximationcompute 
 K = nrow(bounds)
 log_terms = numeric(K) # store terms so that we can use log-sum-exp()
-G_k = numeric(K)       # store terms coming from gaussian integral
+G_k_ep = numeric(K)       # store terms coming from gaussian integral
+G_k_met = numeric(K)
 for (k in 1:K) {
     
     u_k = unname(unlist(psi_df[k,1:D]))
@@ -79,8 +83,8 @@ for (k in 1:K) {
     
     lb = bounds[k, seq(1, 2 * D, 2)] %>% unname %>% unlist
     ub = bounds[k, seq(2, 2 * D, 2)] %>% unname %>% unlist
-    # G_k[k] = epmgp::pmvn(lb, ub, m_k, Q_beta_inv, log = TRUE)
-    G_k[k] = log(TruncatedNormal::pmvnorm(m_k, Q_beta_inv, lb, ub)[1])
+    G_k_ep[k] = epmgp::pmvn(lb, ub, m_k, Q_beta_inv, log = TRUE)
+    G_k_met[k] = log(TruncatedNormal::pmvnorm(m_k, Q_beta_inv, lb, ub)[1])
     
     log_terms[k] = D / 2 * log(2 * pi) - 0.5 * log_det(H_k) - psi_df$psi_u[k] + 
         sum(lambda_k[,k] * u_k) - 0.5 * t(u_k) %*% H_k %*% u_k + 

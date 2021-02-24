@@ -20,7 +20,7 @@ Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub) {
   arma::mat Kinvm = arma::solve(K, m);
   double logZ = arma::datum::inf;
   arma::vec mu_last = -arma::datum::inf * arma::ones(arma::size(mu));
-  double converged = false;
+  bool converged = false;
   int k = 1;
   
   // algorithm loop
@@ -37,6 +37,9 @@ Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub) {
     tau_cavity = 1 / arma::diagvec(Sigma) - tau_site;
     nu_cavity = mu / arma::diagvec(Sigma) - nu_site;
     
+    Rcpp::Rcout << "tau_cavity: " << tau_cavity << std::endl;
+    Rcpp::Rcout << "nu_cavity: " << nu_cavity << std::endl;
+    
     // compute moments using truncated normals
     Rcpp::List moments = trunc_norm_moments(lb, ub, nu_cavity / tau_cavity, 1 / tau_cavity);
     arma::vec sigma_hat_out = moments["sigma_hat"];
@@ -46,10 +49,15 @@ Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub) {
     sigma_hat = sigma_hat_out;
     mu_hat = mu_hat_out;
     
+    Rcpp::Rcout << "sigma_hat: " << sigma_hat << std::endl;
+    
     // update the site parameters
     arma::vec delta_tau_site = (1 / sigma_hat) - tau_cavity - tau_site;
     tau_site += delta_tau_site;
     nu_site = (mu_hat / sigma_hat) - nu_cavity;
+    
+    Rcpp::Rcout << "tau_site: " << tau_site << std::endl;
+    Rcpp::Rcout << "nu_site: " << nu_site << std::endl;
     
     // enforce nonnegativity of tau_site
     if (arma::any(tau_site < 0)) {

@@ -8,4 +8,4 @@ Maintainer: <patrickding@tamu.edu>
 Description: R implementation of Cunningham et al 2011 and Fagan et al 2016.
 License: MIT I guess
 Imports: Rcpp (>= 1.0.5)
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo, RcppFaddeeva

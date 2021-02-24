@@ -5,18 +5,18 @@
 // [[Rcpp::export]]
 double erfcx (double x) {
   double a, d, e, m, p, q, r, s, t;
-  
+
   a = fmax (x, 0.0 - x); // NaN preserving absolute value computation
-  
+
   /* Compute q = (a-4)/(a+4) accurately. [0,INF) -> [-1,1] */
   m = a - 4.0;
   p = a + 4.0;
   r = 1.0 / p;
   q = m * r;
-  t = fma (q + 1.0, -4.0, a); 
-  e = fma (q, -a, t); 
-  q = fma (r, e, q); 
-  
+  t = fma (q + 1.0, -4.0, a);
+  e = fma (q, -a, t);
+  q = fma (r, e, q);
+
   /* Approximate (1+2*a)*exp(a*a)*erfc(a) as p(q)+1 for q in [-1,1] */
   p =             0x1.edcad78fc8044p-31;  //  8.9820305531190140e-10
   p = fma (p, q,  0x1.b1548f14735d1p-30); //  1.5764464777959401e-09
@@ -42,7 +42,7 @@ double erfcx (double x) {
   p = fma (p, q,  0x1.f7f5df66fc349p-7);  //  1.5379652102610957e-02
   p = fma (p, q, -0x1.1df1ad154a27fp-3);  // -1.3962111684056208e-01
   p = fma (p, q,  0x1.dd2c8b74febf6p-3);  //  2.3299511862555250e-01
-  
+
   /* Divide (1+p) by (1+2*a) ==> exp(a*a)*erfc(a) */
   d = a + 0.5;
   r = 1.0 / d;
@@ -51,17 +51,17 @@ double erfcx (double x) {
   t = q + q;
   e = (p - q) + fma (t, -a, 1.0); // residual: (p+1)-q*(1+2*a)
   r = fma (e, r, q);
-  
+
   /* Handle argument of infinity */
   if (a > 0x1.fffffffffffffp1023) r = 0.0;
-  
+
   /* Handle negative arguments: erfcx(x) = 2*exp(x*x) - erfcx(|x|) */
   if (x < 0.0) {
     s = x * x;
     d = fma (x, x, -s);
     e = exp (s);
     r = e - r;
-    r = fma (e, d + d, r); 
+    r = fma (e, d + d, r);
     r = r + e;
     if (e > 0x1.fffffffffffffp1023) r = e; // avoid creating NaN
   }
@@ -92,6 +92,9 @@ Rcpp::List trunc_norm_moments(arma::vec lb_in, arma::vec ub_in,
     // establish bounds
     double a = (lb - mu) / std::sqrt(2 * sigma);
     double b = (ub - mu) / std::sqrt(2 * sigma);
+    
+    Rcpp::Rcout << "a: " << a << std::endl;
+    Rcpp::Rcout << "b: " << b << std::endl;
     
     // stable calculation
     
@@ -193,12 +196,26 @@ Rcpp::List trunc_norm_moments(arma::vec lb_in, arma::vec ub_in,
       
       else {
         // the signs are different, so b > a and b >= 0 and a <= 0
+        Rcpp::Rcout << "Second branch" << std::endl;
         if (std::abs(b) >= std::abs(a)) { 
           if (a >= -26.0) {
             // do things normally
+            Rcpp::Rcout << "do things normally branch" << std::endl;
             logz_hat = std::log(0.5) - std::pow(a, 2) + std::log( 
               erfcx(a) - std::exp(-(std::pow(b, 2) - std::pow(a, 2))) * erfcx(b)  
             );
+            Rcpp::Rcout << "a: " << a << std::endl;
+            Rcpp::Rcout << "b: " << b << std::endl;
+            Rcpp::Rcout << "log - a^2: " << std::log(0.5) - std::pow(a, 2) << std::endl;
+            Rcpp::Rcout << "thing: " << erfcx(a) - std::exp(-(std::pow(b, 2) - std::pow(a, 2))) * erfcx(b) <<
+              std::endl;
+            Rcpp::Rcout << "log thing: " << std::log( 
+                erfcx(a) - std::exp(-(std::pow(b, 2) - std::pow(a, 2))) * erfcx(b)  
+            ) << std::endl;
+            Rcpp::Rcout << "exp(-(b^2 - a^2)): " << std::exp(-(std::pow(b, 2) - std::pow(a, 2))) << std::endl;
+            Rcpp::Rcout << "logz_hat: " << logz_hat << std::endl;
+            Rcpp::Rcout << "erfcx(a): " << erfcx(a) << std::endl;
+            Rcpp::Rcout << "erfcx(b): " << erfcx(b) << std::endl;
             
             mean_const = 2 * (
               1 / (erfcx(a) - exp_a2b2 * erfcx(b)) -
@@ -208,10 +225,14 @@ Rcpp::List trunc_norm_moments(arma::vec lb_in, arma::vec ub_in,
               (lb + mu) / (erfcx(a) - exp_a2b2 * erfcx(b)) - 
                 (ub + mu) / (exp_b2a2 * erfcx(a) - erfcx(b))
             );
+            
+            Rcpp::Rcout << "mean_const: " << mean_const << std::endl;
+            Rcpp::Rcout << "var_const: " << var_const << std::endl;
           }
           
           else {
             // a is too small, so put in something close to 2 instead 
+            Rcpp::Rcout << "Third branch" << std::endl;
             logz_hat = std::log(0.5) - std::pow(b, 2) + std::log( 
               erfcx(-b) - std::exp(-(std::pow(a, 2) - std::pow(b, 2))) * erfcx(-a)
             );

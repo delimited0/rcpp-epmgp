@@ -10,6 +10,7 @@ result$logZ
 # Eric example ----
 load("testing/patrick_v1.RData")
 result <- epmgp::axisepmgp(mu_beta, Q_beta_inv, lb, ub)
+epmgp::pmvn(lb, ub, mu_beta, Q_beta_inv)
 result_TN <- 
 result_poly <- epmgp::epmgp(mu_beta, Q_beta_inv, diag(length(mu_beta)), lb, ub, 200)
 
@@ -17,6 +18,11 @@ result_poly$mu
 result_poly$Sigma[1:5, 1:5]
 
 result$Sigma[1:5, 1:5]
+
+
+load("testing/patrick_v2.RData")
+result <- epmgp::axisepmgp(mu_beta, Q_beta_inv, lb, ub)
+TruncatedNormal::pmvnorm(mu_beta, Q_beta_inv, lb, ub)
 
 # trunc norm moments Eric example nans:
 dat <- read.csv("testing/trunc_norm_moments_failure.csv")

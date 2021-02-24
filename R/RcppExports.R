@@ -13,6 +13,10 @@ sample_epmh <- function(n_samples, ep_mean, ep_chol, F, g, initial) {
     .Call(`_epmgp_sample_epmh`, n_samples, ep_mean, ep_chol, F, g, initial)
 }
 
+seq_epmgp <- function(m, Kinv, lb, ub, max_steps) {
+    .Call(`_epmgp_seq_epmgp`, m, Kinv, lb, ub, max_steps)
+}
+
 range_intersection <- function(first, second) {
     .Call(`_epmgp_range_intersection`, first, second)
 }
