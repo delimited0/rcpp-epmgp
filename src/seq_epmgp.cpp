@@ -98,7 +98,7 @@ Rcpp::List seq_epmgp(arma::vec m, arma::mat Kinv, arma::vec lb, arma::vec ub,
   // double val;
   // double sign;
   // arma::log_det(val, sign, Lambda);
-  double lZ3 = arma::as_scalar(eta.t() * Lambda * eta);
+  double lZ3 = .5*arma::as_scalar(eta.t() * Lambda * eta);
   logZ = arma::sum(logz_hat) + lZ1 + lZ2 + lZ3;
   
   Rcpp::List result = Rcpp::List::create(

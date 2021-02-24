@@ -105,33 +105,47 @@ lb <- lbf(d)
 ub <- ubf(d)
 A <- Abf(d)
 
+# eigenvalues of covariances
 eig_vals <- colSums(A^2)
 
+# pseudo inverse of x_2 | x_1, needed for EP
 Ad <- A[, d, drop=FALSE]
 Xi <- Ad %*% t(Ad)
-
 Xi_eigen <- eigen(Xi)
 Xi_inv <- Xi_eigen$vectors[, 1] %*% diag(1 / Xi_eigen$values[1], nrow = 1) %*% 
   t(Xi_eigen$vectors[, 1])
 
+# compute (singular) covariance of x_i | x_{i-1}
 Xis <- lapply(1:d, function(k) {
   Ad <- A[, k, drop = FALSE]
   Ad %*% t(Ad)  
 })
 
-Kinv <- as.matrix(Matrix::bdiag(Xis))
+# compute pseudo inverses of x_i | x_{i-1}
+Xi_pinvs <- lapply(Xis, function(xi) {
+  Xi_eigen <- eigen(xi)
+  xi_pinv <- Xi_eigen$vectors[, 1] %*% diag(1 / Xi_eigen$values[1], nrow = 1) %*% 
+    t(Xi_eigen$vectors[, 1])
+})
 
+# The prior precision
+Kinv <- as.matrix(Matrix::bdiag(Xi_pinvs))
+
+# do EP updates
 result <- epmgp::seq_epmgp(mu, Xi_inv, lb, ub, 200)
 
 # only the bottom right corner of approximate precision updates
 Lambda <- Kinv
 Lambda[((d-1)*d + 1):d^2, ((d-1)*d + 1):d^2] <- result$Lambda
-logdet_lambda <- determinant(Lambda)
+Lambda_eigen <- eigen(Lambda)
+# Lambda is not full rank, need pseudo determinant
+logdet_lambda <- prod(Lambda_eigen$values[1:3])
 
-seq_logprob <- result$logZ - .5 * sum(log(abs(eig_vals)))
+# the estimate is wrong right now
+seq_logprob <- result$logZ - .5 * sum(log(abs(eig_vals))) - .5*logdet_lambda
 exp(seq_logprob)
 
-# check the approximating moments
+# check the approximating mean
 solve(result$Lambda, result$eta)
 
 # compare to SOV
