@@ -3,44 +3,24 @@
 const double EPS_CONVERGE = 1e-5;
 
 // [[Rcpp::export]]
-Rcpp::List seq_epmgp(arma::vec m, arma::mat K, arma::mat Kinv, 
-                     arma::vec lb, arma::vec ub,
-                     int max_steps) {
+Rcpp::List seq_moment_epmgp(arma::vec m, arma::mat K, 
+                            arma::vec lb, arma::vec ub,
+                            int max_steps) {
   
-  arma::vec nu_site = arma::zeros(Kinv.n_rows);
-  arma::vec tau_site = arma::zeros(Kinv.n_rows);
+  arma::vec nu_site = arma::zeros(K.n_rows);
+  arma::vec tau_site = arma::zeros(K.n_rows);
   
   // initialize q(x)
-  arma::mat Lambda = Kinv;
-  // arma::mat Sigma = K;
-  // arma::vec eta = Lambda f* (lb + ub) / 2;
-  // arma::vec mu = (lb + ub) / 2;
-  // for (int i = 0; i < mu.n_elem; i++) {
-  //   if (std::isinf(mu(i))) {
-  //     mu(i) = copysign(1.0, mu(i)) * 10;
-  //   }
-  // }
-  // arma::vec eta = Lambda * mu;
-  // arma::vec eta = arma::ones(Lambda.n_rows);
-  arma::vec eta = Kinv * m;
-  for (int i = 0; i < eta.n_elem; i++) {
-    if (std::isinf(eta(i))) {
-      eta(i) = copysign(1.0, eta(i)) * 100;
+  arma::mat Sigma = K;
+  arma::vec mu = (lb + ub) / 2;
+  for (int i = 0; i < mu.n_elem; i++) {
+    if (std::isinf(mu(i))) {
+      mu(i) = copysign(1.0, mu(i)) * 10;
     }
   }
   
-  // arma::vec mu = m;
-  // for (int i = 0; i < mu.n_elem; i++) {
-  //   if (std::isinf(mu(i))) {
-  //     mu(i) = copysign(1.0, mu(i)) * 100;
-  //   }
-  // }
-  
-  Rcpp::Rcout << "Lambda: " << Lambda << std::endl;
-  Rcpp::Rcout << "eta: " << eta << std::endl;
-  
-  double logZ;
-  arma::vec eta_last = -arma::datum::inf * arma::ones(arma::size(eta));
+  double logZ = arma::datum::inf;
+  arma::vec mu_last = -arma::datum::inf * arma::ones(mu.n_elem);
   bool converged = false;
   int k = 1;
   int n = lb.n_elem;
@@ -117,17 +97,17 @@ Rcpp::List seq_epmgp(arma::vec m, arma::mat K, arma::mat Kinv,
   // arma::vec mu_cavity = nu_cavity / tau_cavity;
   // double lZ1 = .5*arma::sum(arma::log(tau_site / tau_cavity + 1));
   // double lZ2 = .5*arma::sum(
-  //   (arma::square(mu_cavity) % tau_site -
-  //     2 * mu_cavity % nu_site -
-  //     arma::square(nu_site) / tau_cavity) /
-  //     (1 + tau_site / tau_cavity)
-  // );
+    //   (arma::square(mu_cavity) % tau_site -
+            //     2 * mu_cavity % nu_site -
+            //     arma::square(nu_site) / tau_cavity) /
+      //     (1 + tau_site / tau_cavity)
+    // );
   // double lZ2 = 0.5 * arma::as_scalar(
-  //   nu_cavity.t() * 
-  //     arma::solve(arma::diagmat(tau_site) + arma::diagmat(tau_cavity), 
-  //                 tau_site % nu_cavity / tau_cavity - 2 * nu_site)
-  // );
-                   
+    //   nu_cavity.t() * 
+      //     arma::solve(arma::diagmat(tau_site) + arma::diagmat(tau_cavity), 
+                         //                 tau_site % nu_cavity / tau_cavity - 2 * nu_site)
+    // );
+  
   // double val;
   // double sign;
   // arma::log_det(val, sign, Lambda);

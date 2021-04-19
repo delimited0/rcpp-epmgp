@@ -17,6 +17,8 @@ Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub) {
     }
   }
   
+  Rcpp::Rcout << "mu: " << mu << std::endl;
+  
   arma::mat Kinvm = arma::solve(K, m);
   double logZ = arma::datum::inf;
   arma::vec mu_last = -arma::datum::inf * arma::ones(arma::size(mu));
@@ -32,6 +34,8 @@ Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub) {
   arma::vec mu_hat;
   
   while (!converged) {
+    
+    Rcpp::Rcout << "Iteration " << k << " ==========" << std::endl;
     
     // make cavity distribution
     tau_cavity = 1 / arma::diagvec(Sigma) - tau_site;

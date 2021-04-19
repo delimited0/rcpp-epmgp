@@ -52,11 +52,18 @@ nu_cavity <- c(4.5960e+01,
                3.0310e-01,
                4.4192e+01)
 
-trunc_norm_moments(lb[4], ub[4], nu_cavity[4] / tau_cavity[4], 1 / tau_cavity[4])
+epmgp::trunc_norm_moments(lb[4], ub[4], nu_cavity[4] / tau_cavity[4], 1 / tau_cavity[4])
+
+epmgp::trunc_norm_moments(lb[4], ub[4], nu_cavity[4] / tau_cavity[4], 1 / tau_cavity[4])
+
 
 a <- (lb[4] - nu_cavity[4] / tau_cavity[4]) / sqrt(2 * 1)
 b <- (ub[4] - nu_cavity[4] / tau_cavity[4]) / sqrt(2 * 1)
-erfcx(a) - exp(-(b^2 - a^2)) * erfcx(b)
+
+
+
+epmgp::erfcx(a) - exp(-(b^2 - a^2)) * epmgp::erfcx(b)
+epmgp::erfcx(a) - epmgp::erfcx(b)
 
 G_k[k] = epmgp::pmvn(lb, ub, m_k, H_k_inv, log = TRUE)
 

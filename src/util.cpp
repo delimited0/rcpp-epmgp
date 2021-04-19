@@ -93,8 +93,8 @@ Rcpp::List trunc_norm_moments(arma::vec lb_in, arma::vec ub_in,
     double a = (lb - mu) / std::sqrt(2 * sigma);
     double b = (ub - mu) / std::sqrt(2 * sigma);
     
-    Rcpp::Rcout << "a: " << a << std::endl;
-    Rcpp::Rcout << "b: " << b << std::endl;
+    // Rcpp::Rcout << "a: " << a << std::endl;
+    // Rcpp::Rcout << "b: " << b << std::endl;
     
     // stable calculation
     
@@ -196,26 +196,26 @@ Rcpp::List trunc_norm_moments(arma::vec lb_in, arma::vec ub_in,
       
       else {
         // the signs are different, so b > a and b >= 0 and a <= 0
-        Rcpp::Rcout << "Second branch" << std::endl;
+        // Rcpp::Rcout << "Second branch" << std::endl;
         if (std::abs(b) >= std::abs(a)) { 
           if (a >= -26.0) {
             // do things normally
-            Rcpp::Rcout << "do things normally branch" << std::endl;
+            // Rcpp::Rcout << "do things normally branch" << std::endl;
             logz_hat = std::log(0.5) - std::pow(a, 2) + std::log( 
               erfcx(a) - std::exp(-(std::pow(b, 2) - std::pow(a, 2))) * erfcx(b)  
             );
-            Rcpp::Rcout << "a: " << a << std::endl;
-            Rcpp::Rcout << "b: " << b << std::endl;
-            Rcpp::Rcout << "log - a^2: " << std::log(0.5) - std::pow(a, 2) << std::endl;
-            Rcpp::Rcout << "thing: " << erfcx(a) - std::exp(-(std::pow(b, 2) - std::pow(a, 2))) * erfcx(b) <<
-              std::endl;
-            Rcpp::Rcout << "log thing: " << std::log( 
-                erfcx(a) - std::exp(-(std::pow(b, 2) - std::pow(a, 2))) * erfcx(b)  
-            ) << std::endl;
-            Rcpp::Rcout << "exp(-(b^2 - a^2)): " << std::exp(-(std::pow(b, 2) - std::pow(a, 2))) << std::endl;
-            Rcpp::Rcout << "logz_hat: " << logz_hat << std::endl;
-            Rcpp::Rcout << "erfcx(a): " << erfcx(a) << std::endl;
-            Rcpp::Rcout << "erfcx(b): " << erfcx(b) << std::endl;
+            // Rcpp::Rcout << "a: " << a << std::endl;
+            // Rcpp::Rcout << "b: " << b << std::endl;
+            // Rcpp::Rcout << "log - a^2: " << std::log(0.5) - std::pow(a, 2) << std::endl;
+            // Rcpp::Rcout << "thing: " << erfcx(a) - std::exp(-(std::pow(b, 2) - std::pow(a, 2))) * erfcx(b) <<
+            //   std::endl;
+            // Rcpp::Rcout << "log thing: " << std::log( 
+            //     erfcx(a) - std::exp(-(std::pow(b, 2) - std::pow(a, 2))) * erfcx(b)  
+            // ) << std::endl;
+            // Rcpp::Rcout << "exp(-(b^2 - a^2)): " << std::exp(-(std::pow(b, 2) - std::pow(a, 2))) << std::endl;
+            // Rcpp::Rcout << "logz_hat: " << logz_hat << std::endl;
+            // Rcpp::Rcout << "erfcx(a): " << erfcx(a) << std::endl;
+            // Rcpp::Rcout << "erfcx(b): " << erfcx(b) << std::endl;
             
             mean_const = 2 * (
               1 / (erfcx(a) - exp_a2b2 * erfcx(b)) -
@@ -226,13 +226,13 @@ Rcpp::List trunc_norm_moments(arma::vec lb_in, arma::vec ub_in,
                 (ub + mu) / (exp_b2a2 * erfcx(a) - erfcx(b))
             );
             
-            Rcpp::Rcout << "mean_const: " << mean_const << std::endl;
-            Rcpp::Rcout << "var_const: " << var_const << std::endl;
+            // Rcpp::Rcout << "mean_const: " << mean_const << std::endl;
+            // Rcpp::Rcout << "var_const: " << var_const << std::endl;
           }
           
           else {
             // a is too small, so put in something close to 2 instead 
-            Rcpp::Rcout << "Third branch" << std::endl;
+            // Rcpp::Rcout << "Third branch" << std::endl;
             logz_hat = std::log(0.5) - std::pow(b, 2) + std::log( 
               erfcx(-b) - std::exp(-(std::pow(a, 2) - std::pow(b, 2))) * erfcx(-a)
             );

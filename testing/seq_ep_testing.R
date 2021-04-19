@@ -1,3 +1,56 @@
+# 1d half normal ----
+mu <- 0
+Sigma <- as.matrix(1)
+lb <- 0
+ub <- Inf
+A <- as.matrix(1)
+
+axis_result <- epmgp::axisepmgp(mu, Sigma, lb, ub)
+
+axis_result$logZ
+axis_result$mu
+
+poly_result <- epmgp::epmgp(mu, Sigma, A, lb, ub, 200)
+
+poly_result$logZ
+poly_result$mu
+
+seq_result <- epmgp::seq_epmgp(mu, solve(Sigma), lb, ub,  200)
+
+solve(seq_result$Lambda)
+
+# 2d identity positive orthant ----
+mu <- rep(0, 2)
+Sigma <- diag(2)
+lb <- rep(0, 2)
+ub <- rep(Inf, 2)
+A <- diag(2)
+
+axis_result <- epmgp::axisepmgp(mu, Sigma, lb, ub)
+seq_result <- epmgp::seq_epmgp(mu, solve(Sigma), lb, ub, 200)
+
+axis_result$Sigma
+solve(seq_result$Lambda)
+
+axis_result$mu
+solve(seq_result$Lambda, seq_result$eta)
+
+# 2d dense positive orthant ----
+mu <- rep(0, 2)
+Sigma <- .5 * diag(2) + 0.5 * rep(1, 2) %*% t(rep(1, 2))
+lb <- rep(0, 2)
+ub <- rep(Inf, 2)
+A <- diag(2)
+
+axis_result <- epmgp::axisepmgp(mu, Sigma, lb, ub)
+seq_result <- epmgp::seq_epmgp(mu, solve(Sigma), lb, ub, 1)
+
+axis_result$Sigma
+solve(seq_result$Lambda)
+
+axis_result$mu
+solve(seq_result$Lambda, seq_result$eta)
+
 # trapezoid problem ----
 
 d <- 2
@@ -38,10 +91,12 @@ Xi %*% Xi_inv %*% Xi
 
 # plug this into seq_epmgp
 epmgp::seq_epmgp(mu, Xi_inv, lb, ub, 1)
+epmgp::epmgp(mu, Xi, diag(2*d), lb, ub, 1)
 
 # what if we just ignore the problem dimension
 idx <- c(1, 2, 4)
 epmgp::seq_epmgp(mu[idx], Xi_inv[idx, idx], lb[idx], ub[idx], 1)
+epmgp::epmgp(mu[idx], Xi[idx, idx], diag(2*d)[idx, idx], lb[idx], ub[idx], 1)
 
 # compare to SOV
 mu_t <- as.numeric(A %*% mu)
@@ -92,7 +147,7 @@ d <- 2
 muf <- function(d) rep(0, d)
 Sigmaf <- function(d) diag(d)
 lbf <- function(d) rep(0, d)
-ubf <- function(d) rep(Inf, d)
+ubf <- function(d) rep(Inf,  d)
 Abf <- function(d) {
   cross <- volesti::gen_cross(d, "H")
   A <- cross$A[1:(nrow(cross$A)/2), , drop=FALSE]
@@ -104,9 +159,6 @@ Sigma <- Sigmaf(d)
 lb <- lbf(d)
 ub <- ubf(d)
 A <- Abf(d)
-
-# eigenvalues of covariances
-eig_vals <- colSums(A^2)
 
 # pseudo inverse of x_2 | x_1, needed for EP
 Ad <- A[, d, drop=FALSE]
@@ -120,8 +172,10 @@ Xis <- lapply(1:d, function(k) {
   Ad <- A[, k, drop = FALSE]
   Ad %*% t(Ad)  
 })
+# and their eigenvalues
+eig_vals <- colSums(A^2)
 
-# compute pseudo inverses of x_i | x_{i-1}
+# compute pseudo inverses of covariance of x_i | x_{i-1}
 Xi_pinvs <- lapply(Xis, function(xi) {
   Xi_eigen <- eigen(xi)
   xi_pinv <- Xi_eigen$vectors[, 1] %*% diag(1 / Xi_eigen$values[1], nrow = 1) %*% 
@@ -129,24 +183,29 @@ Xi_pinvs <- lapply(Xis, function(xi) {
 })
 
 # The prior precision
-Kinv <- as.matrix(Matrix::bdiag(Xi_pinvs))
+Kdiag <- list(Xi_pinvs[[2]], matrix(0, nrow = d, ncol = d))
+Kinv <- as.matrix(Matrix::bdiag(Xi_pinvs)) + as.matrix(Matrix::bdiag(Kdiag))
 
 # do EP updates
 result <- epmgp::seq_epmgp(mu, Xi_inv, lb, ub, 200)
+# result_poly <- epmgp::epmgp(mu, Xi_inv, )
 
 # only the bottom right corner of approximate precision updates
 Lambda <- Kinv
 Lambda[((d-1)*d + 1):d^2, ((d-1)*d + 1):d^2] <- result$Lambda
 Lambda_eigen <- eigen(Lambda)
 # Lambda is not full rank, need pseudo determinant
-logdet_lambda <- prod(Lambda_eigen$values[1:3])
+logdet_lambda <- sum(log(Lambda_eigen$values[1:3]))
 
 # the estimate is wrong right now
-seq_logprob <- result$logZ - .5 * sum(log(abs(eig_vals))) - .5*logdet_lambda
+seq_logprob <- result$logZ - .5 * sum(log(abs(eig_vals))) + .5*logdet_lambda
 exp(seq_logprob)
 
 # check the approximating mean
 solve(result$Lambda, result$eta)
+
+# check approximating covariance
+solve(result$Lambda)
 
 # compare to SOV
 mu_t <- as.numeric(A %*% mu)
@@ -155,8 +214,20 @@ ub_t <- ub - mu_t
 
 sov_prob <- mvtnorm::pmvnorm(lb_t, ub_t, mu_t, sigma = A %*% Sigma %*% t(A))
 
+# compare to the usual EPs
 axisepmgp_result <- epmgp::moments(mu = mu_t, Sigma = A %*% Sigma %*% t(A), 
                                    lb = lb_t, ub = ub_t)
 epmgp_result <- epmgp::moments2(mu, Sigma, lb, ub, A)
+
+# understanding updates ----
+d <- 2
+mu <- rep(0, d)
+Sigma <- .5*diag(d) + .5*rep(1, d) %*% t(rep(1, d))
+lb <- rep(0, d)
+ub <- rep(Inf, d)
+A <- diag(d)
+
+axis_result <- epmgp::moments(lb, ub, mu, Sigma)
+poly_result <- epmgp::moments2(mu, Sigma, lb, ub, A)
 
 

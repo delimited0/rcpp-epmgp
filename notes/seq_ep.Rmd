@@ -1,0 +1,335 @@
+---
+title: "Sequence correction for Gaussian probability"
+author: "Patrick Ding"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    extra_dependencies: 
+    - ["algorithm"]
+    - ["algorithmicx"]
+    - ["algpseudocode"]
+    - ["float"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Expectation propagation for Gaussian probability estimation works well for rectangular integration regions, but poorly for polyhedral regions. We provide a
+way to rewrite the polyhedral region Gaussian probability problem as a rectangular problem.
+
+# Cast polyhedral problem as rectangular one
+
+We write the multivariate Gaussian density with covariance $\Sigma$ truncated to
+a polytope region $l \le Ax \le u$, where $x \in \mathbb{R}^n$, 
+$A \in \mathbb{R}^{m \times n}$, and $l,u \in \mathbb{R}^m$, as
+\begin{align*}
+  p(x) &= N(x; 0, \Sigma) 1 \{l \le Cx \le u \}
+  \\
+  &= N(x; 0, \Sigma) \prod_{i=1}^m t_i(x) 
+\end{align*}
+where $t_i(x) = 1 \{l_i \le c_i^T x \le u_i \}$. 
+For random variable $X$ with this density, the normalizing constant of this density is $P(l \le AX \le u)$. Let's assume $\Sigma = I$, and call the 
+random variable $Z$ in this case, so we want $P(l \le AZ \le u)$. 
+
+Let $A_{\cdot, k}$ be the $k$th column of $A$. Let $\epsilon_i \sim_{iid} N(0, 1)$ for $i \in \{1, \ldots, n\}$. We construct a sequence of random
+vectors $\{X_1, X_2, \ldots, X_n\}$ 
+\begin{align*}
+  X_1 &= A_{\cdot, 1} \epsilon_1 
+  \\
+  X_2 &= X_1 + A_{\cdot, 2} \epsilon_2
+  \\
+  \vdots
+  \\
+  X_{n-1} &= X_{n-2} + A_{\cdot, n-1} \epsilon_{n-1}
+  \\
+  X_n &= X_{n-1} + A_{\cdot, n} \epsilon_n
+\end{align*}
+substituting $X_k$ for $k \in \{1, \ldots, n-1\}$ into the last expression, observe that
+\begin{align*}
+  X_n &= A_{\cdot, 1} \epsilon_1 + \cdots + A_{\cdot, n} \epsilon_n
+  \\
+  &= A \begin{pmatrix} \epsilon_1 \\ \vdots \\ \epsilon_n  \end{pmatrix}.
+\end{align*}
+From properties of multivariate normal $X_n$ has the same distribution as $AZ$,
+$N(0, AA^T)$, so
+\begin{align*}
+  P(l \le X_n \le u) = P(l \le AZ \le u).
+\end{align*}
+The joint density of the $X_i$ factorizes as
+\begin{align*}
+  p(x_1, \ldots, x_n) &= p(x_n| x_{n-1})p(x_{n-1}|x_{n-2}) \cdots p(x_2|x_1)p(x_1)
+\end{align*}
+where
+\begin{align*}
+  p(x_i | x_{i-1}) &= N(x_i; x_{i-1}, A_{\cdot, i}A^T_{\cdot, i}) & i \in \{2, \ldots, n\}
+  \\
+  p(x_1) &= N(x_1; 0, A_{\cdot, 1}A^T_{\cdot, 1})
+\end{align*}
+The covariance $\Xi_i = A_{\cdot, i}A_{\cdot, i}^T$ is not invertible in general,
+it is rank 1.
+But from Khatri (1968) we can express this singular normal distribution in terms of the Moore-Penrose pseudoinverse of $\Xi_i$. 
+Let $\gamma_i$ be the sole eigenvector of $\Xi_i$, and let $\lambda_i$ be the sole eigenvalue of $\Xi_i$.
+Then 
+\begin{align}
+  \gamma_i &= \frac{A_{\cdot, i}}{||A_{\cdot, i}||}
+  \\
+  \lambda_i &= ||A_{\cdot, i}||^2
+  \\
+  \Xi^{+} &= \frac{1}{\lambda_i} \gamma_i \gamma_i^T
+\end{align}
+and the density is
+\begin{align*}
+  p(x_i | x_{i-1}) &= (2\pi)^{-r/2} |\lambda_i|^{-1/2} 
+    \exp \left[ -\frac{\lambda_i}{2}(x_i - x_{i-1})^T\gamma_i \gamma_i^T(x_i - x_{i-1})\right]
+  \\
+  p(x_1) &= (2\pi)^{-r/2} |\lambda_1|^{-1/2} 
+    \exp \left[ -\frac{\lambda_1}{2}x_1^T\gamma_1 \gamma_1^T x_1 \right]
+\end{align*}
+Finally we add the indicator for the constraints on $X_n$ and get an augmented truncated multivariate normal density proportional to:
+\begin{align}\label{eq:augmented}
+  p(x) &= \frac{1}{S} p(x_1, \ldots, x_n)1\{\ell \le x_n \le u \} \nonumber
+  \\
+  &= \frac{1}{S} p(x_1) \left[ \prod_{i=2}^n p(x_i|x_{i-1}) \right] 1\{\ell \le x_n \le u \} 
+\end{align}
+where $x = (x_1, \ldots, x_n)^T \in \mathbb{R}^{n^2}$ and $S$ is a normalizing constant.
+The ratio of this density's normalizing constant and the normalizing constant of $p(x_1, \ldots, x_n)$ will give us $P(\ell \le X_n \le u)$. 
+
+# EP form
+
+This density is intractable because of the term $1\{\ell \le x_n \le b \}$, but we can approximate the density with a Gaussian using the EP method of Cunningham et al (2011). 
+This will be efficient and accurate since the truncation region is axis aligned, and their method performs well in that case. 
+Equation \ref{eq:augmented} is exactly of the form that the Cunningham et al
+method handles:
+\begin{align}
+  p(x) &= p_0(x) \prod_{k=1}^n t_k(x) 
+\end{align}
+where
+\begin{align}\label{eq:ep_form}
+  p_0(x) &= p(x_1) \left[ \prod_{i=2}^n p(x_i|x_{i-1}) \right] & \text{prior}
+  \\
+  t_k(x) &= 1 \{\ell_k \le c_k^T x \le b_k \} = 1 \{\ell_k \le x_{n_k} \le b_k \} & \text{likelihood factor}
+  \\
+  c_k &= 
+    \begin{pmatrix} 
+      0_{1 \times n(n-1)} & 0_{1 \times k-1} & 1 & 0_{1 \times n-k}
+    \end{pmatrix}^T
+\end{align}
+
+The density of the prior is singular Gaussian, 
+\begin{align*}
+  p_0(x) &= N(x; m, K)
+  \\
+  &= (2 \pi)^{-n/2} \left( \prod_{i=1}^n |\lambda_i|^{-1/2} \right) \exp(x^T K^{-1} x)
+  \\
+  m &= 0
+  \\
+  K^{-1} &= 
+    \begin{pmatrix}
+      \Xi^{+}_1 + \Xi^{+}_2 & \Xi^+_2\
+      \\
+      \Xi^{+}_2 & \Xi^{+}_2 + \Xi^{+}_3 & \Xi^{+}_3 
+      \\
+      & \Xi^{+}_3 & \Xi^{+}_3  + \Xi^{+}_4
+      \\
+      & & & \ddots
+      \\
+      & & & & \Xi^{+}_{n-1} + \Xi^{+}_n & \Xi^{+}_n 
+      \\
+      & & & & \Xi^{+}_n & \Xi^{+}_n
+    \end{pmatrix}
+\end{align*}
+where unspecified blocks in $K^{-1}$ are 0.
+
+Only the bottom right $n \times n$ corner of $K^{-1}$, $\Xi_n^+$, will be involved in the 
+EP updates. In general for a $n^2 \times n^2$ matrix $B$, denote that sub matrix as $B_{-n}$. 
+
+We do not have easy access to $K$, which would require inverting the singular and $d^2 \times d^2$ dimensional precision $K^{-1}$. In EP updates we would like to work only with $K^{-1}$. 
+
+# EP factor updates
+
+We approximate the $t_k(x)$ with unnormalized Gaussian densities with $\tilde{S}_k$, $\tilde{\mu}_k$, and $\tilde{\sigma}^2_k$ the approximating normalizing constant, mean, and variance for the $k$th factor:
+<!--  -->
+\begin{align*}
+  \tilde{t}_k(x) = \tilde{S}_k N(c_k^T x; \tilde{\mu}_k, \tilde{\sigma}_k)
+\end{align*}
+<!--  -->
+leading to the overall approximating unnormalized Gaussian with normalizing
+constant $S$, mean $\mu$, and covariance $\Sigma$:
+<!-- . -->
+\begin{align*}
+  q(x) = p_0(x) \prod_{k=1}^n \tilde{t}_k(x) = N(x; \mu, \Sigma)
+\end{align*}
+<!-- . -->
+Initialize $\mu = m$, $\Sigma^{-1} = \Lambda = K^{-1}$.
+The EP cavity distribution is singular Gaussian
+<!-- . -->
+\begin{align}\label{eq:cavity}
+  q^{\backslash k}(x) &= Z^{\backslash k} N(x; u^{\backslash k}, V^{\backslash k})
+  \\
+  V^{\backslash k} &= \left(\Sigma^{-1} -
+    \frac{1}{\tilde{\sigma}_k}c_k c_k^T\right)^{-1}
+  \\
+  u^{\backslash k} &= V^{\backslash k} \left( 
+    \Sigma^{-1}\mu -  \frac{\tilde{\mu}_k}{\tilde{\sigma}_k^2} c_k \right)
+\end{align}
+<!-- . -->
+Since we are dealing with rank-one factors and the approximating factors are Gaussians and therefore closed under marginalization, we can moment match the tilted and approximating densities in the one dimension of interest, where the cavity 
+distribution is univariate Gaussian:
+\begin{align}\label{eq:marginal_cavity}
+  q_{\backslash k}(c_k^Tx) = q_{\backslash k}(x_{k'}) &= S^{\backslash k}N(x_{k_k}; 
+                                          \mu_{\backslash k}, 
+                                          \sigma_{\backslash k})
+  \\
+  \sigma_{\backslash k} &= \left(\frac{1}{\Sigma_{k'k'}} - \frac{1}{\tilde{\sigma}_k^2} \right)^{-1}
+  \\
+  \mu_{\backslash k} &= \sigma_{\backslash k} 
+    \left( \frac{\mu_{k'}}{\Sigma_{k', k'}} -
+    \frac{\tilde{\mu}_k}{\tilde{\sigma}_k^2}\right)
+  \\
+  k' &= n(n+1) + k
+\end{align}
+However this depends on the diagonal elements of $\Sigma$, which we do not have. 
+One might suppose working in the natural parameterization would help us here, but that is not the case.
+To see this, we have the canonical parameters of the full cavity distribution $q(x) = N(x; e^{\backslash k}, R^{\backslash k})$:
+\begin{align*}
+  R^{\backslash k} &= (V^{\backslash k})^{-1} = \Sigma^{-1} -
+    \frac{1}{\tilde{\sigma}_k}c_k c_k^T
+  \\
+  e^{\backslash k} &= (V^{\backslash k})^{-1} u^{\backslash k} = 
+    \Sigma^{-1}\mu -  \frac{\tilde{\mu}_k}{\tilde{\sigma}_k^2} c_k
+\end{align*}
+Then the marginal distribution is normal with precision and mean precision:
+\begin{align*}
+  \tau_{\backslash k} &= R^{\backslash k}_{k'k'} - 
+    R^{\backslash k}_{k'\cdot} (R_{-k', -k'}^{\backslash k})^{-1} 
+    R^{\backslash k}_{\cdot k'}
+\end{align*}
+where $R_{-k', -k'}^{\backslash k}$ is the $n^2-1 \times n^2-1$ matrix formed by removing the $k'$th row and column of $R^{\backslash k}$. We cannot compute the inverse of this matrix.
+
+Setting aside the issues with the cavity distribution, the moments of the tilted distribution $t_k(x)q_{\backslash k}(x)$ are
+\begin{align}\label{eq:moments_tilted}
+  \hat{S}_k &= \frac{1}{2}\big(\Phi(\beta) - \Phi(\alpha))
+  \\
+  \hat{\mu}_k &= \mu_{\backslash k} + 
+    \frac{1}{\hat{S}_k} \frac{\sigma_{\backslash k}}{\sqrt{2\pi}} 
+    (\exp(-\alpha^2) - \exp(-\beta^2))
+  \\
+  \hat{\sigma}_k^2 &= \mu_{\backslash k}^2 + \sigma_{\backslash k} +
+    \frac{1}{\hat{S}_k} \frac{\sigma_{\backslash k}}{\sqrt{2\pi}} 
+    \left( -(b_k + \mu_{\backslash k})\exp(-\beta^2) \right) - \hat{\mu}_k^2
+  \\
+  \alpha &= \frac{\ell_k - \mu_{\backslash k}}{\sqrt{2 \sigma^2_{\backslash k}}}
+  \\
+  \beta &= \frac{u_k - \mu_{\backslash k}}{\sqrt{2 \sigma^2_{\backslash k}}}
+\end{align}
+We match the moments of $\tilde{t}_k(x)q_{\backslash k}(x)$ to the moments of
+$t_k(x)q_{\backslash k}(x)$, leading to factor updates:
+\begin{align}\label{eq:factor_update}
+  \tilde{\sigma}_k^2 &= (\hat{\sigma_k}^{-2} - \sigma_{\backslash k}^{-2})^{-1}
+  \\
+  \tilde{\mu}_k &= 
+    \tilde{\sigma}_k^2(\hat{\sigma}_k^{-2} \hat{\mu}_k - 
+    \sigma_{\backslash k}^{-2} \mu_{\backslash k})
+  \\
+  \tilde{S}_k &= \hat{S}_k\sqrt{2\pi} 
+    \sqrt{\sigma_{\backslash k}^2 + \tilde{\sigma}_k^2}
+    \exp \left( \frac{1}{2} \frac{(\mu_{\backslash k} - \tilde{\mu}_k)^2}
+                     {( \sigma_{\backslash k}^2 + \tilde{\sigma}_k^2 )}         
+         \right)
+\end{align}
+
+# Overall approximation update
+
+Finally we can update the the overall approximation. To avoid inverting $d^2 \times d^2$ matrices, we work with the natural parameterization of the approximating Gaussian:
+\begin{align*}
+  q(x) &= \exp\left( a + \eta^Tx - \frac{1}{2}x^T \Lambda x \right)
+  \\
+  \Lambda &= \Sigma^{-1}
+  \\
+  \eta &= \Lambda \mu
+  \\
+  a &= -\frac{1}{2}n\log (2\pi) - \log |\Lambda| + \eta^T\Lambda\eta
+\end{align*}
+We will also parameterize the approximate factors in the natural parameterization:
+\begin{align*}
+  \tilde{\tau}_k &= \frac{1}{\tilde{\sigma}^2_k}
+  \\
+  \tilde{\nu}_k &= \frac{\tilde{\mu}_k}{\tilde{\sigma}^2_k}
+\end{align*}
+Initialize $\Lambda = K^{-1}$, $\eta = 0$. We update only the parts of the parameters that are affected by the factor updates. This is the bottom right $n \times n$ corner of $\Lambda$, $\Lambda_{nn}$, and the last $n$ elements of $\eta$, $\eta_n$.  
+\begin{align}
+  \Lambda_{nn}^{new} &= \Lambda_{nn}^{old} + (\tilde{\tau}_k^{new} - \tilde{\tau}_k^{old}) c_k c_k^T  \nonumber
+  \\
+  \implies \Lambda_{nn_{kk}}^{new} &= \Lambda_{nn_{kk}}^{old} +             \tilde{\tau}_k^{new} - \tilde{\tau}_k^{old}
+  \\
+  \eta^{new} &= \eta^{old} + (\tilde{\nu}_k^{new} - \tilde{\nu}_k^{old}) c_k
+\nonumber
+  \\
+  \implies \eta_{n_k}^{new} &= \eta^{old}_k + \tilde{\nu}_k^{new} - \tilde{\nu}_k^{old}
+\end{align}
+Since only $\eta_n$ is updated, the rest of $\eta$ is 0.
+We will need to update the determinant $|\Lambda|$ for the normalization constant. For each dimension $k \in \{1, \ldots, n\}$ the update is
+\begin{align}
+  |\Lambda^{new}| = |\Lambda^{old}| \left(1 + (\tilde{\tau}_k^{new} - \tilde{\tau}_k^{old}) (\Lambda^{old})^{-1}_{k',k'} \right)
+\end{align}
+For this update to work we need the initial determinant and the inverse 
+precision at each step:
+\begin{align}
+  |\Lambda^0| = |K^{-1}|
+  \\
+  (\Lambda^{old})^{-1}
+\end{align}
+Next we update the normalizing constant of the approximation:
+\begin{align}
+  \log S &= -\frac{1}{2} \sum_{k=1}^n \log |\lambda_k|  \nonumber
+  \\
+         & \quad  +\sum_{k=1}^n \log \tilde{S}_k - \frac{1}{2}\left(\frac{\tilde{\mu}_k^2}{\tilde{\sigma}_k^2} + \log \tilde{\sigma}_k^2 + \log(2\pi) \right) \nonumber
+          \\
+        & \quad  + \frac{1}{2}\left( \eta_n^T\Lambda_{nn}\eta_n - \log |\Lambda| \right) \nonumber
+  \\
+  &= -\frac{1}{2} \sum_{k=1}^n \log |\lambda_k| \nonumber
+  \\
+  & \quad + \sum_{k=1}^n \log \hat{S}_k + 
+    \frac{1}{2} \log(\tilde{\tau}_k \sigma_{\backslash k}^2 + 1) +
+    \frac{1}{2} \frac{
+      \mu_{\backslash k}^2 \tilde{\tau}_k  - 
+      2 \mu_{\backslash k} \tilde{\nu}_k - 
+      \tilde{\nu}_k^2\sigma_{\backslash k}^2
+      }{
+      1 + \tilde{\tau}_k \sigma_{\backslash k}^2  
+      } \nonumber
+  \\
+  &\quad  + \frac{1}{2}\left( \eta_n^T\Lambda_{nn}\eta_n - \log |\Lambda| \right)
+\end{align}
+where we rewrite the middle term as Cunningham does. 
+$S$ is the desired probability $P(AZ \le b)$.
+
+# Algorithm
+
+\begin{algorithm}[H]
+  \caption{Sequence corrected EP for Gaussian probability}
+  \label{algo}
+  \begin{algorithmic}
+    \State Set $\tilde{\sigma}_k = 0$
+    \While{not converged}
+      \For{$k = 1:n$}
+        \State Form cavity distribution 
+          $ 
+            q^{\backslash k}(x) = 
+              Z^{\backslash k} N(x; u^{\backslash k}, V^{\backslash k}) 
+          $
+        \State Compute moments of tilted distribution $t_k(x)q_{\backslash k}(x)$
+        \State Update parameters of $\tilde{t}_k(x)$
+      \EndFor
+      \State Update overall approximation $\mu$, $\Sigma$
+    \EndWhile
+    \State Calculate $S$\\
+    \Return $S$
+  \end{algorithmic}
+\end{algorithm}
+
+# Appendix {#Appendix}
+
+

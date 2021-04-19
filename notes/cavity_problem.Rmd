@@ -1,0 +1,91 @@
+---
+title: "Issues with sequence correction for Gaussian probability"
+author: "Patrick Ding"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    extra_dependencies: 
+    - ["algorithm"]
+    - ["algorithmicx"]
+    - ["algpseudocode"]
+    - ["float"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Let $K^{-1}$ be the prior precision, $m$ be the prior mean, $c_i$ is the $i$th standard basis vector. We approximate the truncated normal $p(x) = N(m, K)1\{a \le Ax \le b\}$ with $q(x) = N(x; \mu, \Sigma)$. 
+We work in the natural parameterization where $\eta = \Sigma^{-1}\mu$ and $\Lambda = \Sigma^{-1}$ because we only have the prior precision when we use the sequence to convert polygonal problems to axis aligned problems.
+
+Directly converting the cavity distribution of Cunningham et al 2011 to natural parameterization is problematic because 
+\begin{align*}
+  \frac{1}{\sigma_{\backslash i}^2} = \tau_{\backslash i} =
+    \frac{1}{c_i^T \Sigma c_i} - \frac{1}{\tilde{\sigma}_i^2} \ne
+    c_i^T \Lambda c_i - \frac{1}{\tilde{\sigma}_i^2}
+\end{align*}
+That is, we can't just access the diagonal of the approximate precision $\Lambda$
+to compute the precision of the $i$th cavity distribution, we need to get the diagonal of its inverse, $\Sigma$. 
+
+
+
+Cunningham et al denote the cavity distribution from removing the $i$th factor 
+as $q^{\backslash i}(x) = N(x, u^{\backslash i}, V^{\backslash i})$, and gives their forms in equations (30) and (31):
+\begin{align*}
+  V^{\backslash i} &= \left(\Sigma^{-1} -
+    \frac{1}{\tilde{\sigma_i^2}} c_i c_i^T \right)^{-1}
+  \\
+  u^{\backslash i} &= V^{\backslash i} \left(\Sigma^{-1}\mu -
+    \frac{\tilde{\mu}_i}{\tilde{\sigma}_i^2}c_i \right)
+\end{align*}
+Therefore the natural parameters are 
+\begin{align*}
+  R^{\backslash i} &= {V^{\backslash i}}^{-1} = \Sigma^{-1} -
+    \frac{1}{\tilde{\sigma_i^2}} c_i c_i^T
+  \\
+  e^{\backslash i} &= (V^{\backslash i})^{-1}u^{\backslash i} = \Sigma^{-1}\mu -
+    \frac{\tilde{\mu}_i}{\tilde{\sigma}_i^2}c_i
+\end{align*}
+As in Cunningham et al (33), define $A \in \mathbb{R}^{n \times n}$ as
+\begin{align*}    
+  A = \begin{bmatrix} c_i, a_2, \ldots, a_n \end{bmatrix}
+\end{align*}
+Then we marginalize over the 
+\begin{align*}
+  q_{\backslash i}(c_i^T x) = q_{\backslash}(x_i) &= 
+    \int_{\backslash c_i; x} q^{\backslash i}(x') dx'
+  \\
+  &= \int_{\backslash c_i; x} Z^{\backslash i} N(x'; e^{\backslash i}, R^{\backslash i})
+  \\
+  &= \int_{\backslash c_i; x} Z^{\backslash i} 
+    \exp \left[ {e^{\backslash i}}^T x' - \frac{1}{2}{x'}^T R^{\backslash i} 
+    x' \right]dx'
+  \\
+  &= \int_{\backslash e_1; (c^T x)e_1} Z^{\backslash i} \exp 
+    \left[ {e^{\backslash i}}^T Ay - \frac{1}{2}y^T A^T R^{\backslash i} 
+    Ay \right]dy, & \text{since } y = A^Tx' \text{ and }\mid dy/dx \mid = \mid A \mid =  1
+  \\
+  &= \int_{\backslash e_1; (c^T x)e_1} Z^{\backslash i} 
+  N(y; A^Te^{\backslash i}, A^T R^{\backslash i}  A)dy
+  \\
+  &= Z^{\backslash i} N(c_i^T x; c_i^T e^{\backslash i}, c_i^T R^{\backslash i} c_i)
+\end{align*}
+These cavity parameters are
+\begin{align*}
+  c_i^T R^{\backslash i}c_i &= c_i^T \left(\Sigma^{-1} - 
+    \frac{1}{\tilde{\sigma_i^2}} c_i c_i^T \right)c_i
+  \\
+  &= c_i^T \Sigma^{-1} c_i - \frac{1}{\tilde{\sigma_i^2}}c_i^Tc_i c_i^T c_i
+  \\
+  &= \Lambda_{ii} - \frac{1}{\tilde{\sigma_i^2}}
+  \\
+  c_i^T e^{\backslash i} &= c_i^T \left( \Sigma^{-1}\mu -
+    \frac{\tilde{\mu}_i}{\tilde{\sigma}_i^2}c_i \right)
+  \\
+  &= c_i^T \Sigma^{-1}\mu - \frac{\tilde{\mu}_i}{\tilde{\sigma}_i^2}c_i^T c_i
+  \\
+  &= \eta_i - \frac{\tilde{\mu}_i}{\tilde{\sigma}_i^2}
+\end{align*}
+But this does not match the moment parameterization of the cavity updates. 
+Something has gone wrong in this derivation.
+
