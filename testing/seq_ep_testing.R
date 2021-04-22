@@ -76,7 +76,6 @@ eig_vals <- colSums(A^2)
 Ad <- A[, d, drop=FALSE]
 Xi <- Ad %*% t(Ad)
 
-
 Matrix::rankMatrix(Xi)
 Xi_eigen <- eigen(Xi)
 
@@ -88,6 +87,27 @@ Xi_inv %*% Xi %*% Xi_inv
 Xi %*% Xi_inv %*% Xi
 
 # now why can't we write this out?
+
+# compute the covariance, which we can
+Xi_list <- apply(A, 2, function(Ad) Ad %*% t(Ad))
+
+Xi_list <- lapply(split(A, 1:ncol(A)), function(a) {
+         a %*% t(a)
+       })
+
+K <- matrix(data = 0, nrow = 2*d, ncol = 2*d)
+
+for (i in 1:d) {
+  # fill row
+  
+  topleft <- d*i
+  
+  for (j in 1:d) {
+    K[(topleft:(i+d-1), ]
+  }
+  # fill column
+}
+
 
 # plug this into seq_epmgp
 epmgp::seq_epmgp(mu, Xi_inv, lb, ub, 1)

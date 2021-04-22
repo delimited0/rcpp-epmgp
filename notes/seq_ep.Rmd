@@ -25,15 +25,15 @@ We write the multivariate Gaussian density with covariance $\Sigma$ truncated to
 a polytope region $l \le Ax \le u$, where $x \in \mathbb{R}^n$, 
 $A \in \mathbb{R}^{m \times n}$, and $l,u \in \mathbb{R}^m$, as
 \begin{align*}
-  p(x) &= N(x; 0, \Sigma) 1 \{l \le Cx \le u \}
+  p(x) &= \mathcal{N}_n(x; 0, \Sigma) 1 \{l \le Cx \le u \}
   \\
-  &= N(x; 0, \Sigma) \prod_{i=1}^m t_i(x) 
+  &= \mathcal{N}_n(x; 0, \Sigma) \prod_{i=1}^m t_i(x),
 \end{align*}
 where $t_i(x) = 1 \{l_i \le c_i^T x \le u_i \}$. 
 For random variable $X$ with this density, the normalizing constant of this density is $P(l \le AX \le u)$. Let's assume $\Sigma = I$, and call the 
 random variable $Z$ in this case, so we want $P(l \le AZ \le u)$. 
 
-Let $A_{\cdot, k}$ be the $k$th column of $A$. Let $\epsilon_i \sim_{iid} N(0, 1)$ for $i \in \{1, \ldots, n\}$. We construct a sequence of random
+Let $A_{\cdot, k}$ be the $k$th column of $A$. Let $\epsilon_i \sim_{iid} \mathcal{N}(0, 1)$ for $i \in \{1, \ldots, n\}$. We construct a sequence of random
 vectors $\{X_1, X_2, \ldots, X_n\}$ 
 \begin{align*}
   X_1 &= A_{\cdot, 1} \epsilon_1 
@@ -44,16 +44,16 @@ vectors $\{X_1, X_2, \ldots, X_n\}$
   \\
   X_{n-1} &= X_{n-2} + A_{\cdot, n-1} \epsilon_{n-1}
   \\
-  X_n &= X_{n-1} + A_{\cdot, n} \epsilon_n
+  X_n &= X_{n-1} + A_{\cdot, n} \epsilon_n.
 \end{align*}
-substituting $X_k$ for $k \in \{1, \ldots, n-1\}$ into the last expression, observe that
+Substituting $X_k$ for $k \in \{1, \ldots, n-1\}$ into the last expression, observe that
 \begin{align*}
   X_n &= A_{\cdot, 1} \epsilon_1 + \cdots + A_{\cdot, n} \epsilon_n
   \\
   &= A \begin{pmatrix} \epsilon_1 \\ \vdots \\ \epsilon_n  \end{pmatrix}.
 \end{align*}
 From properties of multivariate normal $X_n$ has the same distribution as $AZ$,
-$N(0, AA^T)$, so
+$\mathcal{N}_m(0, AA^T)$, so
 \begin{align*}
   P(l \le X_n \le u) = P(l \le AZ \le u).
 \end{align*}
@@ -63,12 +63,11 @@ The joint density of the $X_i$ factorizes as
 \end{align*}
 where
 \begin{align*}
-  p(x_i | x_{i-1}) &= N(x_i; x_{i-1}, A_{\cdot, i}A^T_{\cdot, i}) & i \in \{2, \ldots, n\}
+  p(x_i | x_{i-1}) &= \mathcal{N}_m(x_i; x_{i-1}, A_{\cdot, i}A^T_{\cdot, i}) & i \in \{2, \ldots, n\}
   \\
-  p(x_1) &= N(x_1; 0, A_{\cdot, 1}A^T_{\cdot, 1})
+  p(x_1) &= \mathcal{N}_m(x_1; 0, A_{\cdot, 1}A^T_{\cdot, 1}).
 \end{align*}
-The covariance $\Xi_i = A_{\cdot, i}A_{\cdot, i}^T$ is not invertible in general,
-it is rank 1.
+The covariance $\Xi_i = A_{\cdot, i}A_{\cdot, i}^T$ is not invertible in general, it is rank 1.
 But from Khatri (1968) we can express this singular normal distribution in terms of the Moore-Penrose pseudoinverse of $\Xi_i$. 
 Let $\gamma_i$ be the sole eigenvector of $\Xi_i$, and let $\lambda_i$ be the sole eigenvalue of $\Xi_i$.
 Then 
@@ -77,7 +76,7 @@ Then
   \\
   \lambda_i &= ||A_{\cdot, i}||^2
   \\
-  \Xi^{+} &= \frac{1}{\lambda_i} \gamma_i \gamma_i^T
+  \Xi^{+} &= \frac{1}{\lambda_i} \gamma_i \gamma_i^T,
 \end{align}
 and the density is
 \begin{align*}
@@ -85,13 +84,13 @@ and the density is
     \exp \left[ -\frac{\lambda_i}{2}(x_i - x_{i-1})^T\gamma_i \gamma_i^T(x_i - x_{i-1})\right]
   \\
   p(x_1) &= (2\pi)^{-r/2} |\lambda_1|^{-1/2} 
-    \exp \left[ -\frac{\lambda_1}{2}x_1^T\gamma_1 \gamma_1^T x_1 \right]
+    \exp \left[ -\frac{\lambda_1}{2}x_1^T\gamma_1 \gamma_1^T x_1 \right].
 \end{align*}
 Finally we add the indicator for the constraints on $X_n$ and get an augmented truncated multivariate normal density proportional to:
 \begin{align}\label{eq:augmented}
   p(x) &= \frac{1}{S} p(x_1, \ldots, x_n)1\{\ell \le x_n \le u \} \nonumber
   \\
-  &= \frac{1}{S} p(x_1) \left[ \prod_{i=2}^n p(x_i|x_{i-1}) \right] 1\{\ell \le x_n \le u \} 
+  &= \frac{1}{S} p(x_1) \left[ \prod_{i=2}^n p(x_i|x_{i-1}) \right] 1\{\ell \le x_n \le u \}, 
 \end{align}
 where $x = (x_1, \ldots, x_n)^T \in \mathbb{R}^{n^2}$ and $S$ is a normalizing constant.
 The ratio of this density's normalizing constant and the normalizing constant of $p(x_1, \ldots, x_n)$ will give us $P(\ell \le X_n \le u)$. 
@@ -119,11 +118,9 @@ where
 
 The density of the prior is singular Gaussian, 
 \begin{align*}
-  p_0(x) &= N(x; m, K)
+  p_0(x) &= \mathcal{N}_{nm}(x; 0, K)
   \\
   &= (2 \pi)^{-n/2} \left( \prod_{i=1}^n |\lambda_i|^{-1/2} \right) \exp(x^T K^{-1} x)
-  \\
-  m &= 0
   \\
   K^{-1} &= 
     \begin{pmatrix}
@@ -142,10 +139,40 @@ The density of the prior is singular Gaussian,
 \end{align*}
 where unspecified blocks in $K^{-1}$ are 0.
 
-Only the bottom right $n \times n$ corner of $K^{-1}$, $\Xi_n^+$, will be involved in the 
-EP updates. In general for a $n^2 \times n^2$ matrix $B$, denote that sub matrix as $B_{-n}$. 
-
-We do not have easy access to $K$, which would require inverting the singular and $d^2 \times d^2$ dimensional precision $K^{-1}$. In EP updates we would like to work only with $K^{-1}$. 
+We also have access to the covariance matrix of $x$, $K$. Note that
+\begin{align}
+  X_i &= \sum_{k=1}^i A_{\cdot, k} \epsilon_k 
+  \\
+  E[X_i] &= 0,
+\end{align}
+and $K_{ij}$ is
+\begin{align}
+  Cov(X_i, X_j) &= 
+    E \left[ 
+      \left( \sum_{r = 1}^i A_{\cdot, r} \epsilon_r \right) 
+      \left(\sum_{s = 1}^j A_{\cdot, s} \epsilon_s \right)^T
+    \right] - 
+    E[X_i]E[X_j]
+  \\
+  &= \sum_{t = 1}^{\min (i, j)} A_{\cdot, t}A_{\cdot, t}^T
+  \\
+  &= \sum_{t = 1}^{\min (i, j)} \Xi_t.
+\end{align}
+The covariance matrix is
+\begin{align}
+  K &= 
+    \begin{pmatrix}
+      \Xi_1 & \Xi_1 & \cdots & \cdots & \Xi_1 
+      \\
+      \Xi_1 & \Xi_1 + \Xi_2 & \Xi_1 + \Xi_2 & \cdots & \Xi_1 + \Xi_2
+      \\
+      \Xi_1 & \Xi_1 + \Xi_2 & \ddots        &        & \vdots
+      \\
+      \vdots &  \vdots &    & \sum_{t=1}^{n-1} \Xi_t &  \sum_{t=1}^{n-1} \Xi_t  
+      \\
+      \Xi_1 & \Xi_1 + \Xi_2 & \cdots   & \sum_{t=1}^{n-1} \Xi_t & \sum_{t=1}^{n} \Xi_t
+    \end{pmatrix}
+\end{align}
 
 # EP factor updates
 
