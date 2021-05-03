@@ -182,7 +182,12 @@ Rcpp::List epmgp(arma::vec m, arma::mat K, arma::mat C, arma::vec lb, arma::vec 
   Rcpp::List result = Rcpp::List::create(
     Rcpp::_["logZ"] = logz,
     Rcpp::_["mu"] = mu,
-    Rcpp::_["Sigma"] = Sigma
+    Rcpp::_["Sigma"] = Sigma,
+    Rcpp::_["logz_hat"] = logz_hat,
+    Rcpp::_["nu_cavity"] = nu_cavity,
+    Rcpp::_["tau_cavity"] = tau_cavity,
+    Rcpp::_["nu_site"] = nu_site,
+    Rcpp::_["tau_site"] = tau_site
   );
   
   return result;

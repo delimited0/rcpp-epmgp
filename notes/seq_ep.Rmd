@@ -80,10 +80,10 @@ Then
 \end{align}
 and the density is
 \begin{align*}
-  p(x_i | x_{i-1}) &= (2\pi)^{-r/2} |\lambda_i|^{-1/2} 
+  p(x_i | x_{i-1}) &= (2\pi)^{-n/2} |\lambda_i|^{-1/2} 
     \exp \left[ -\frac{\lambda_i}{2}(x_i - x_{i-1})^T\gamma_i \gamma_i^T(x_i - x_{i-1})\right]
   \\
-  p(x_1) &= (2\pi)^{-r/2} |\lambda_1|^{-1/2} 
+  p(x_1) &= (2\pi)^{-n/2} |\lambda_1|^{-1/2} 
     \exp \left[ -\frac{\lambda_1}{2}x_1^T\gamma_1 \gamma_1^T x_1 \right].
 \end{align*}
 Finally we add the indicator for the constraints on $X_n$ and get an augmented truncated multivariate normal density proportional to:
@@ -92,7 +92,7 @@ Finally we add the indicator for the constraints on $X_n$ and get an augmented t
   \\
   &= \frac{1}{S} p(x_1) \left[ \prod_{i=2}^n p(x_i|x_{i-1}) \right] 1\{\ell \le x_n \le u \}, 
 \end{align}
-where $x = (x_1, \ldots, x_n)^T \in \mathbb{R}^{n^2}$ and $S$ is a normalizing constant.
+where $x = (x_1, \ldots, x_n)^T \in \mathbb{R}^{mn}$ and $S$ is a normalizing constant.
 The ratio of this density's normalizing constant and the normalizing constant of $p(x_1, \ldots, x_n)$ will give us $P(\ell \le X_n \le u)$. 
 
 # EP form
@@ -112,7 +112,7 @@ where
   \\
   c_k &= 
     \begin{pmatrix} 
-      0_{1 \times n(n-1)} & 0_{1 \times k-1} & 1 & 0_{1 \times n-k}
+      0_{1 \times m(n-1)} & 0_{1 \times k-1} & 1 & 0_{1 \times m-k}
     \end{pmatrix}^T
 \end{align}
 
@@ -156,8 +156,9 @@ and $K_{ij}$ is
   \\
   &= \sum_{t = 1}^{\min (i, j)} A_{\cdot, t}A_{\cdot, t}^T
   \\
-  &= \sum_{t = 1}^{\min (i, j)} \Xi_t.
+  &= \sum_{t = 1}^{\min (i, j)} \Xi_t,
 \end{align}
+where many terms are 0 because the $\epsilon_i$ are independent.
 The covariance matrix is
 \begin{align}
   K &= 
@@ -189,7 +190,7 @@ constant $S$, mean $\mu$, and covariance $\Sigma$:
   q(x) = p_0(x) \prod_{k=1}^n \tilde{t}_k(x) = N(x; \mu, \Sigma)
 \end{align*}
 <!-- . -->
-Initialize $\mu = m$, $\Sigma^{-1} = \Lambda = K^{-1}$.
+Initialize $\mu = m$, $\Sigma = K$.
 The EP cavity distribution is singular Gaussian
 <!-- . -->
 \begin{align}\label{eq:cavity}
@@ -202,8 +203,7 @@ The EP cavity distribution is singular Gaussian
     \Sigma^{-1}\mu -  \frac{\tilde{\mu}_k}{\tilde{\sigma}_k^2} c_k \right)
 \end{align}
 <!-- . -->
-Since we are dealing with rank-one factors and the approximating factors are Gaussians and therefore closed under marginalization, we can moment match the tilted and approximating densities in the one dimension of interest, where the cavity 
-distribution is univariate Gaussian:
+Since we are dealing with rank-one factors and the approximating factors are Gaussians and therefore closed under marginalization, we can moment match the tilted and approximating densities in the one dimension of interest, where the cavity distribution is univariate Gaussian:
 \begin{align}\label{eq:marginal_cavity}
   q_{\backslash k}(c_k^Tx) = q_{\backslash k}(x_{k'}) &= S^{\backslash k}N(x_{k_k}; 
                                           \mu_{\backslash k}, 
@@ -215,27 +215,10 @@ distribution is univariate Gaussian:
     \left( \frac{\mu_{k'}}{\Sigma_{k', k'}} -
     \frac{\tilde{\mu}_k}{\tilde{\sigma}_k^2}\right)
   \\
-  k' &= n(n+1) + k
+  k' &= m(n-1) + k
 \end{align}
-However this depends on the diagonal elements of $\Sigma$, which we do not have. 
-One might suppose working in the natural parameterization would help us here, but that is not the case.
-To see this, we have the canonical parameters of the full cavity distribution $q(x) = N(x; e^{\backslash k}, R^{\backslash k})$:
-\begin{align*}
-  R^{\backslash k} &= (V^{\backslash k})^{-1} = \Sigma^{-1} -
-    \frac{1}{\tilde{\sigma}_k}c_k c_k^T
-  \\
-  e^{\backslash k} &= (V^{\backslash k})^{-1} u^{\backslash k} = 
-    \Sigma^{-1}\mu -  \frac{\tilde{\mu}_k}{\tilde{\sigma}_k^2} c_k
-\end{align*}
-Then the marginal distribution is normal with precision and mean precision:
-\begin{align*}
-  \tau_{\backslash k} &= R^{\backslash k}_{k'k'} - 
-    R^{\backslash k}_{k'\cdot} (R_{-k', -k'}^{\backslash k})^{-1} 
-    R^{\backslash k}_{\cdot k'}
-\end{align*}
-where $R_{-k', -k'}^{\backslash k}$ is the $n^2-1 \times n^2-1$ matrix formed by removing the $k'$th row and column of $R^{\backslash k}$. We cannot compute the inverse of this matrix.
 
-Setting aside the issues with the cavity distribution, the moments of the tilted distribution $t_k(x)q_{\backslash k}(x)$ are
+The moments of the tilted distribution $t_k(x)q_{\backslash k}(x)$ are
 \begin{align}\label{eq:moments_tilted}
   \hat{S}_k &= \frac{1}{2}\big(\Phi(\beta) - \Phi(\alpha))
   \\
@@ -269,52 +252,39 @@ $t_k(x)q_{\backslash k}(x)$, leading to factor updates:
 
 # Overall approximation update
 
-Finally we can update the the overall approximation. To avoid inverting $d^2 \times d^2$ matrices, we work with the natural parameterization of the approximating Gaussian:
-\begin{align*}
-  q(x) &= \exp\left( a + \eta^Tx - \frac{1}{2}x^T \Lambda x \right)
-  \\
-  \Lambda &= \Sigma^{-1}
-  \\
-  \eta &= \Lambda \mu
-  \\
-  a &= -\frac{1}{2}n\log (2\pi) - \log |\Lambda| + \eta^T\Lambda\eta
-\end{align*}
-We will also parameterize the approximate factors in the natural parameterization:
+We parameterize the approximate factors in the natural parameterization as in Cunningham et al.:
 \begin{align*}
   \tilde{\tau}_k &= \frac{1}{\tilde{\sigma}^2_k}
   \\
   \tilde{\nu}_k &= \frac{\tilde{\mu}_k}{\tilde{\sigma}^2_k}
 \end{align*}
-Initialize $\Lambda = K^{-1}$, $\eta = 0$. We update only the parts of the parameters that are affected by the factor updates. This is the bottom right $n \times n$ corner of $\Lambda$, $\Lambda_{nn}$, and the last $n$ elements of $\eta$, $\eta_n$.  
+We update only the parts of the approximate parameters that are affected by the factor updates. 
+<!-- This is the bottom right $m \times m$ corner of $\Sigma$, $\Sigma_{(mm)}$, and the last $n$ elements of $\mu$, $\mu_{(m)}$.   -->
+Unfortunately this is all elements of the approximate parameters in general.
 \begin{align}
-  \Lambda_{nn}^{new} &= \Lambda_{nn}^{old} + (\tilde{\tau}_k^{new} - \tilde{\tau}_k^{old}) c_k c_k^T  \nonumber
+  \Sigma^{new} &= \Sigma^{old} - 
+  \left(
+    \frac{\Delta \tilde{\tau}_k}{1 + \Delta \tilde{\tau}_k \Sigma^{old}_{k'k'}}
+  \right)(\Sigma^{old}_{\cdot, k'})(\Sigma^{old}_{\cdot, k'})^T
   \\
-  \implies \Lambda_{nn_{kk}}^{new} &= \Lambda_{nn_{kk}}^{old} +             \tilde{\tau}_k^{new} - \tilde{\tau}_k^{old}
-  \\
-  \eta^{new} &= \eta^{old} + (\tilde{\nu}_k^{new} - \tilde{\nu}_k^{old}) c_k
-\nonumber
-  \\
-  \implies \eta_{n_k}^{new} &= \eta^{old}_k + \tilde{\nu}_k^{new} - \tilde{\nu}_k^{old}
+  \mu^{new} &= \mu^{old} + 
+    \left(
+      \frac{\Delta \tilde{\nu}_k - \Delta \tilde{\tau}_k \mu^{old}_{k'}}
+           {1 + \Delta \tilde{\tau}_k \Sigma^{old}_{k'k'}}
+    \right)
+    \Sigma^{old}_{\cdot, k'}
 \end{align}
-Since only $\eta_n$ is updated, the rest of $\eta$ is 0.
-We will need to update the determinant $|\Lambda|$ for the normalization constant. For each dimension $k \in \{1, \ldots, n\}$ the update is
-\begin{align}
-  |\Lambda^{new}| = |\Lambda^{old}| \left(1 + (\tilde{\tau}_k^{new} - \tilde{\tau}_k^{old}) (\Lambda^{old})^{-1}_{k',k'} \right)
-\end{align}
-For this update to work we need the initial determinant and the inverse 
-precision at each step:
-\begin{align}
-  |\Lambda^0| = |K^{-1}|
-  \\
-  (\Lambda^{old})^{-1}
-\end{align}
+We also need to update the approximate precision $\Sigma^{-1}$, which we need to compute the normalizing constant of the approximate Gaussian. 
+\begin{align*}
+  \Sigma^{-1} = K^{-1} + \sum_{k=1}^m \tilde{\tau}_k c_k c_k^T
+\end{align*}
 Next we update the normalizing constant of the approximation:
 \begin{align}
   \log S &= -\frac{1}{2} \sum_{k=1}^n \log |\lambda_k|  \nonumber
   \\
-         & \quad  +\sum_{k=1}^n \log \tilde{S}_k - \frac{1}{2}\left(\frac{\tilde{\mu}_k^2}{\tilde{\sigma}_k^2} + \log \tilde{\sigma}_k^2 + \log(2\pi) \right) \nonumber
+         & \quad  +\sum_{k=1}^n \log \tilde{S}_k - \frac{1}{2}\left(\frac{\tilde{\mu}_k^2}{\tilde{\sigma}_k^2} + \log \tilde{\sigma}_k^2 + \log(2\pi) \right) \nonumber\
           \\
-        & \quad  + \frac{1}{2}\left( \eta_n^T\Lambda_{nn}\eta_n - \log |\Lambda| \right) \nonumber
+        & \quad  + \frac{1}{2}\left( \mu^T\Sigma^{-1}\mu + \log |\Sigma| \right) \nonumber
   \\
   &= -\frac{1}{2} \sum_{k=1}^n \log |\lambda_k| \nonumber
   \\
@@ -328,7 +298,7 @@ Next we update the normalizing constant of the approximation:
       1 + \tilde{\tau}_k \sigma_{\backslash k}^2  
       } \nonumber
   \\
-  &\quad  + \frac{1}{2}\left( \eta_n^T\Lambda_{nn}\eta_n - \log |\Lambda| \right)
+  &\quad  + \frac{1}{2}\left( \mu^T\Sigma^{-1}\mu + \log |\Sigma| \right)
 \end{align}
 where we rewrite the middle term as Cunningham does. 
 $S$ is the desired probability $P(AZ \le b)$.
@@ -359,4 +329,37 @@ $S$ is the desired probability $P(AZ \le b)$.
 
 # Appendix {#Appendix}
 
+## Normalizing constants
+
+\begin{align*}
+  p_0(x) \prod_{i=1}^n \tilde{t}_i(x) &= 
+    \frac{1}{\sqrt{2\pi|K|}} \exp \left( -\frac{1}{2}(x - m)^T K^{-1} (x -m\right) 
+    \prod_{i=1}^n \frac{1}{\sqrt{2\pi \tilde{\sigma}^2_i}} \exp\left(-\frac{1}{2\tilde{\sigma}_i^2}(c_i^Tx - \tilde{\mu_i})^2 \right) 
+    \\
+    &= \exp\left( -\frac{1}{2}(n\log 2\pi + \log|K| + m^TK^{-1}m) \right)
+      \exp(m^TK^{-1}x - \frac{1}{2} x^TK^{-1}x) \times
+      \\
+    & \quad \prod_{i=1}^n \left( 
+      \exp \left( -\frac{1}{2}(\log 2\pi - \log \tilde{\tau}_i + \tilde{\nu}_i^2\tilde{\tau}_i) \right)
+      \exp \left( \tilde{\nu}_i c_i^Tx - \frac{1}{2} \tilde{\tau}_i x^T c_i c_i^T x \right) \right) 
+    \\
+    &= \exp\left( -\frac{1}{2}(n\log 2\pi + \log|K| + m^TK^{-1}m) \right) \times
+    \\
+    & \quad \prod_{i=1}^n \left(
+      \exp \left( -\frac{1}{2}(\log 2\pi - \log \tilde{\tau}_i + \tilde{\nu}_i^2\tilde{\tau}_i) \right) 
+        \exp \left( (m^T K^{-1} + \sum_{i=1}^n \tilde{\nu}_i c_i^T) x
+        - \frac{1}{2}x^T( K^{-1} + \sum_{i=1}^n \tilde{\tau}_i c_i c_i^T )x\right)
+      \right)
+\end{align*}
+We see that this is a multivariate Gaussian distribution in canonical parameterization, with 
+\begin{align}
+  \eta = K^{-1}m + \sum_{i=1}^n \tilde{\nu}_i c_i
+  \\
+  \Lambda = K^{-1} + \sum_{i=1}^n \tilde{\tau}_i c_i c_i^T
+\end{align}
+and log normalizing constant
+\begin{align}
+  -\frac{1}{2}(n\log 2\pi + \log|K| + m^TK^{-1}m) + 
+  \sum_{i=1}^n -\frac{1}{2}(\log 2\pi - \log \tilde{\tau}_i + \tilde{\nu}_i^2\tilde{\tau}_i)
+\end{align}
 

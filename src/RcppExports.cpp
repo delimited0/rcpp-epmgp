@@ -6,6 +6,22 @@
 
 using namespace Rcpp;
 
+// aug_epmgp
+Rcpp::List aug_epmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub, int max_steps, int p);
+RcppExport SEXP _epmgp_aug_epmgp(SEXP mSEXP, SEXP KSEXP, SEXP lbSEXP, SEXP ubSEXP, SEXP max_stepsSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type K(KSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lb(lbSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type ub(ubSEXP);
+    Rcpp::traits::input_parameter< int >::type max_steps(max_stepsSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    rcpp_result_gen = Rcpp::wrap(aug_epmgp(m, K, lb, ub, max_steps, p));
+    return rcpp_result_gen;
+END_RCPP
+}
 // axisepmgp
 Rcpp::List axisepmgp(arma::vec m, arma::mat K, arma::vec lb, arma::vec ub);
 RcppExport SEXP _epmgp_axisepmgp(SEXP mSEXP, SEXP KSEXP, SEXP lbSEXP, SEXP ubSEXP) {
@@ -53,17 +69,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // seq_epmgp
-Rcpp::List seq_epmgp(arma::vec m, arma::mat Kinv, arma::vec lb, arma::vec ub, int max_steps);
-RcppExport SEXP _epmgp_seq_epmgp(SEXP mSEXP, SEXP KinvSEXP, SEXP lbSEXP, SEXP ubSEXP, SEXP max_stepsSEXP) {
+Rcpp::List seq_epmgp(arma::vec m, arma::mat K, arma::mat Kinv, arma::vec lb, arma::vec ub, int max_steps);
+RcppExport SEXP _epmgp_seq_epmgp(SEXP mSEXP, SEXP KSEXP, SEXP KinvSEXP, SEXP lbSEXP, SEXP ubSEXP, SEXP max_stepsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type K(KSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Kinv(KinvSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type lb(lbSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type ub(ubSEXP);
     Rcpp::traits::input_parameter< int >::type max_steps(max_stepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(seq_epmgp(m, Kinv, lb, ub, max_steps));
+    rcpp_result_gen = Rcpp::wrap(seq_epmgp(m, K, Kinv, lb, ub, max_steps));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -143,10 +160,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_epmgp_aug_epmgp", (DL_FUNC) &_epmgp_aug_epmgp, 6},
     {"_epmgp_axisepmgp", (DL_FUNC) &_epmgp_axisepmgp, 4},
     {"_epmgp_epmgp", (DL_FUNC) &_epmgp_epmgp, 6},
     {"_epmgp_sample_epmh", (DL_FUNC) &_epmgp_sample_epmh, 6},
-    {"_epmgp_seq_epmgp", (DL_FUNC) &_epmgp_seq_epmgp, 5},
+    {"_epmgp_seq_epmgp", (DL_FUNC) &_epmgp_seq_epmgp, 6},
     {"_epmgp_range_intersection", (DL_FUNC) &_epmgp_range_intersection, 2},
     {"_epmgp_sample_epess", (DL_FUNC) &_epmgp_sample_epess, 9},
     {"_epmgp_test_wall_hit", (DL_FUNC) &_epmgp_test_wall_hit, 8},
